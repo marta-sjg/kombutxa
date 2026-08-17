@@ -9,11 +9,23 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <section id="login-screen" class="login-screen" aria-labelledby="login-title">
+      <form id="login-form" class="login-card">
+        <img class="login-logo" src="logo.png" alt="Logotip de Marta" />
+        <p class="eyebrow">DIARI PRIVAT</p>
+        <h1 id="login-title">Diari de kombutxa</h1>
+        <p>Entra amb el mateix correu i contrasenya al mòbil i a l’ordinador per veure les teves dades sincronitzades.</p>
+        <label>Correu electrònic<input id="login-email" type="email" autocomplete="email" required /></label>
+        <label>Contrasenya<input id="login-password" type="password" autocomplete="current-password" required /></label>
+        <p id="login-error" class="login-error" role="alert"></p>
+        <button id="login-submit" class="button primary" type="submit">Entrar</button>
+      </form>
+    </section>
     <main class="app-shell">
       <header>
         <p class="eyebrow">FERMENTACIÓ ARTESANA</p>
         <div class="brand-line"><div class="brand-mark"><img class="brand-logo" src="logo.png" alt="Logotip de Marta" /><span>MARTA</span></div><h1>Diari de kombutxa</h1></div>
-        <div class="cloud-bar" aria-live="polite"><span id="cloud-status">Les dades es desen en aquest dispositiu.</span><button id="auth-button" class="button secondary" type="button">Inicia sessió amb Google</button></div>
+        <div class="cloud-bar" aria-live="polite"><span id="cloud-status">Inicia sessió per sincronitzar les dades.</span><button id="auth-button" class="button secondary" type="button">Tanca sessió</button></div>
       </header>
 
       <section class="panel form-panel" aria-labelledby="f1-title">
