@@ -28,7 +28,9 @@
         <div class="cloud-bar" aria-live="polite"><span id="cloud-status">Inicia sessió per sincronitzar les dades.</span><button id="auth-button" class="button secondary" type="button">Tanca sessió</button></div>
       </header>
 
-      <section class="panel form-panel" aria-labelledby="f1-title">
+      <nav class="app-tabs" aria-label="Seccions del diari" role="tablist"><button class="app-tab is-active" type="button" role="tab" aria-selected="true" data-view-button="production">F1 i F2</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="calendar">Calendari</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="registry">Registre</button></nav>
+
+      <section class="panel form-panel tab-panel" data-view="production" aria-labelledby="f1-title">
         <div class="section-heading"><h2 id="f1-title">F1 · Producció</h2><button id="clear-f1" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <p class="phase-help">Registre de la base de kombutxa. No genera cap informe de prova.</p>
         <form id="f1-form">
@@ -47,7 +49,7 @@
         </form>
       </section>
 
-      <section class="panel form-panel" aria-labelledby="f2-title">
+      <section class="panel form-panel tab-panel" data-view="production" aria-labelledby="f2-title">
         <div class="section-heading"><h2 id="f2-title">F2 · Nova prova</h2><button id="clear-f2" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <p class="phase-help">Una prova de sabor i embotellat. Pots relacionar-la amb una F1 produïda anteriorment.</p>
         <form id="f2-form">
@@ -70,16 +72,18 @@
         </form>
       </section>
 
-      <section aria-labelledby="calendar-title">
+      <section class="tab-panel" data-view="calendar" aria-labelledby="calendar-title">
         <div class="section-heading calendar-heading"><h2 id="calendar-title">Calendari</h2><div class="calendar-controls"><button id="previous-month" type="button" class="button secondary">←</button><span id="calendar-month" aria-live="polite"></span><button id="next-month" type="button" class="button secondary">→</button></div></div>
         <div class="calendar"><div class="weekdays" aria-hidden="true"><span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span></div><div id="calendar-days" class="calendar-days"></div></div>
       </section>
 
-      <section aria-labelledby="f1-list-title"><div class="section-heading"><h2 id="f1-list-title">Registre de F1</h2><span id="f1-count" class="count"></span></div><div id="f1-empty" class="empty-state">Encara no hi ha produccions de F1.</div><div id="f1-list" class="batch-list"></div></section>
-      <section aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de proves F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha proves de F2.</div><div id="f2-list" class="batch-list"></div></section>
+      <section class="registry-tools tab-panel" data-view="registry" aria-labelledby="registry-tools-title"><div class="section-heading"><div><h2 id="registry-tools-title">Registre i comparacions</h2><p class="phase-help">Selecciona els registres que vulguis exportar o les proves F2 que vulguis comparar.</p></div></div><div class="registry-actions"><button id="select-all-records" type="button" class="button secondary">Selecciona-ho tot</button><button id="clear-record-selection" type="button" class="button secondary">Neteja la selecció</button><button id="export-selected-pdf" type="button" class="button primary">PDF seleccionats</button><button id="export-selected-word" type="button" class="button secondary">Word seleccionats</button><button id="compare-selected" type="button" class="button secondary">Compara proves F2</button></div><p id="selection-help" class="selection-help" aria-live="polite">No hi ha cap registre seleccionat.</p></section>
+      <section class="tab-panel" data-view="registry" aria-labelledby="f1-list-title"><div class="section-heading"><h2 id="f1-list-title">Registre de F1</h2><span id="f1-count" class="count"></span></div><div id="f1-empty" class="empty-state">Encara no hi ha produccions de F1.</div><div id="f1-list" class="batch-list"></div></section>
+      <section class="tab-panel" data-view="registry" aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de proves F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha proves de F2.</div><div id="f2-list" class="batch-list"></div></section>
+      <section id="comparison-panel" class="comparison-panel tab-panel" data-view="registry" hidden aria-labelledby="comparison-title"><div class="section-heading"><h2 id="comparison-title">Comparació de proves F2</h2><button id="close-comparison" type="button" class="button secondary">Tanca</button></div><div id="comparison-table"></div></section>
     </main>
-    <template id="f1-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>Producció F1</h3></div><div class="card-actions"><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><dl class="values"></dl><p class="recipe"></p><p class="notes"></p><div class="gallery"></div></article></template>
-    <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><div class="card-actions"><button type="button" class="pdf-button button secondary">PDF</button><button type="button" class="word-button button secondary">Word</button><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
+    <template id="f1-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>Producció F1</h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><dl class="values"></dl><p class="recipe"></p><p class="notes"></p><div class="gallery"></div></article></template>
+    <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="pdf-button button secondary">PDF</button><button type="button" class="word-button button secondary">Word</button><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js"></script>
   </body>
 </html>
