@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ca">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#315d42" />
+    <title>Diari de Kombutxa</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header>
+        <p class="eyebrow">FERMENTACIÓ ARTESANA</p>
+        <div class="brand-line"><div class="brand-mark"><img class="brand-logo" src="logo.png" alt="Logotip de Marta" /><span>MARTA</span></div><h1>Diari de kombutxa</h1></div>
+      </header>
+
+      <section class="panel form-panel" aria-labelledby="f1-title">
+        <div class="section-heading"><h2 id="f1-title">F1 · Producció</h2><button id="clear-f1" type="button" class="button secondary">Cancel·la / neteja</button></div>
+        <p class="phase-help">Registre de la base de kombutxa. No genera cap informe de prova.</p>
+        <form id="f1-form">
+          <div class="form-grid">
+            <label>Data d'inici<input id="f1-date" type="date" required /></label>
+            <label>Quantitat (L)<input id="f1-liters" type="number" step="0.1" min="0.1" required placeholder="2" /></label>
+            <label>Temperatura (°C)<input id="f1-temperature" type="number" step="0.1" min="0" placeholder="24" /></label>
+            <label>pH<input id="f1-ph" type="number" step="0.1" min="0" max="14" placeholder="3.2" /></label>
+            <label>Dies de F1<input id="f1-days" type="number" min="0" placeholder="7" /></label>
+          </div>
+          <div id="f1-recipe" class="recipe-box" aria-live="polite">Introdueix els litres per calcular la recepta.</div>
+          <label>Notes de producció<textarea id="f1-notes" rows="2" placeholder="Estat del SCOBY, olor, incidències..."></textarea></label>
+          <label class="file-label">Fotos de la producció<input id="f1-photos" type="file" accept="image/*" multiple /></label>
+          <div id="f1-photo-preview" class="photo-preview" aria-live="polite"></div>
+          <button id="save-f1" class="button primary" type="submit">Desa la producció</button>
+        </form>
+      </section>
+
+      <section class="panel form-panel" aria-labelledby="f2-title">
+        <div class="section-heading"><h2 id="f2-title">F2 · Nova prova</h2><button id="clear-f2" type="button" class="button secondary">Cancel·la / neteja</button></div>
+        <p class="phase-help">Una prova de sabor i embotellat. Pots relacionar-la amb una F1 produïda anteriorment.</p>
+        <form id="f2-form">
+          <div class="form-grid">
+            <label>Base de F1<select id="f2-f1-id"><option value="">Sense vincular</option></select></label>
+            <label>Nom de la prova<input id="f2-name" required placeholder="Ex.: Maduixa i gingebre" /></label>
+            <label>Data d'embotellat<input id="f2-date" type="date" required /></label>
+            <label>Quantitat F2 (L)<input id="f2-liters" type="number" step="0.1" min="0.1" required placeholder="1" /></label>
+              <label>Dies de F2<input id="f2-days" type="number" min="0" placeholder="3" /></label>
+            </div>
+            <div class="ingredient-heading"><h3>Ingredients de F2</h3><button id="add-ingredient" type="button" class="button secondary">Afegeix ingredient</button></div>
+            <div id="f2-components" class="components"></div>
+            <datalist id="ingredient-options"><option value="Maduixa"></option><option value="Fruits vermells"></option><option value="Poma"></option><option value="Taronja"></option><option value="Gingebre"></option><option value="Llimona"></option><option value="Menta"></option></datalist>
+            <div id="f2-recipe" class="recipe-box" aria-live="polite">Indica quantitat i fruita per calcular la F2.</div>
+          <label>Notes dels ingredients<textarea id="f2-ingredients" rows="2" placeholder="Ex.: pell de taronja, format de la fruita, ajustaments…"></textarea></label>
+          <label>Notes de la prova<textarea id="f2-notes" rows="3" placeholder="Color, olor, tast, gasificació, canvis observats..."></textarea></label>
+          <label class="file-label">Fotos de la prova<input id="f2-photos" type="file" accept="image/*" multiple /></label>
+          <div id="f2-photo-preview" class="photo-preview" aria-live="polite"></div>
+          <button id="save-f2" class="button primary" type="submit">Desa la prova</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="calendar-title">
+        <div class="section-heading calendar-heading"><h2 id="calendar-title">Calendari</h2><div class="calendar-controls"><button id="previous-month" type="button" class="button secondary">←</button><span id="calendar-month" aria-live="polite"></span><button id="next-month" type="button" class="button secondary">→</button></div></div>
+        <div class="calendar"><div class="weekdays" aria-hidden="true"><span>Dl</span><span>Dt</span><span>Dc</span><span>Dj</span><span>Dv</span><span>Ds</span><span>Dg</span></div><div id="calendar-days" class="calendar-days"></div></div>
+      </section>
+
+      <section aria-labelledby="f1-list-title"><div class="section-heading"><h2 id="f1-list-title">Registre de F1</h2><span id="f1-count" class="count"></span></div><div id="f1-empty" class="empty-state">Encara no hi ha produccions de F1.</div><div id="f1-list" class="batch-list"></div></section>
+      <section aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de proves F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha proves de F2.</div><div id="f2-list" class="batch-list"></div></section>
+    </main>
+    <template id="f1-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>Producció F1</h3></div><div class="card-actions"><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><dl class="values"></dl><p class="recipe"></p><p class="notes"></p><div class="gallery"></div></article></template>
+    <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><div class="card-actions"><button type="button" class="pdf-button button secondary">PDF</button><button type="button" class="word-button button secondary">Word</button><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="app.js"></script>
+  </body>
+</html>
