@@ -50,14 +50,10 @@
     if (currentUser) { await auth.signOut(); return; }
     try {
       setStatus('S’està obrint l’accés de Google…');
-      await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+      await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
     } catch (error) {
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/cancelled-popup-request') {
-        await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-      } else {
-        console.error(error);
-        setStatus('No s’ha pogut iniciar sessió. Torna-ho a provar.', 'error');
-      }
+      console.error(error);
+      setStatus('No s’ha pogut iniciar sessió. Torna-ho a provar.', 'error');
     }
   });
 
