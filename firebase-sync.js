@@ -1,4 +1,4 @@
-/* Firebase is used only after Marta signs in with her Google account. */
+/* Sincronització privada amb correu i contrasenya, com l'app de Factures Marta. */
 (() => {
   const storageKey = 'diari-kombutxa-v3';
   const firebaseConfig = {
@@ -8,13 +8,18 @@
     projectId: 'diari-kombutxa-marta',
     storageBucket: 'diari-kombutxa-marta.firebasestorage.app',
     messagingSenderId: '1080420629513',
-    appId: '1:1080420629513:web:89e8dc133c40ae00284cd8',
-    measurementId: 'G-ZJT8J0W41T'
+    appId: '1:1080420629513:web:89e8dc133c40ae00284cd8'
   };
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const database = firebase.database();
+  const loginScreen = document.querySelector('#login-screen');
+  const loginForm = document.querySelector('#login-form');
+  const loginEmail = document.querySelector('#login-email');
+  const loginPassword = document.querySelector('#login-password');
+  const loginError = document.querySelector('#login-error');
+  const loginButton = document.querySelector('#login-submit');
   const status = document.querySelector('#cloud-status');
   const bar = document.querySelector('.cloud-bar');
   const authButton = document.querySelector('#auth-button');
@@ -30,6 +35,13 @@
     bar.classList.toggle('is-synced', state === 'synced');
     bar.classList.toggle('is-error', state === 'error');
   };
+  const showLogin = () => {
+    loginScreen.classList.remove('is-hidden');
+    loginPassword.value = '';
+    loginError.textContent = '';
+    setTimeout(() => loginEmail.focus(), 0);
+  };
+  const hideLogin = () => loginScreen.classList.add('is-hidden');
   const writeCloud = async data => {
     if (!dataRef || !data) return;
     try {
@@ -42,32 +54,42 @@
     }
   };
 
-  window.kombutxaCloud = {
-    save(data) { return writeCloud(data); }
-  };
+  window.kombutxaCloud = { save(data) { return writeCloud(data); } };
 
-  authButton.addEventListener('click', async () => {
-    if (currentUser) { await auth.signOut(); return; }
+  loginForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    loginError.textContent = '';
+    loginButton.disabled = true;
+    loginButton.textContent = 'Entrant…';
     try {
-      setStatus('S’està obrint l’accés de Google…');
-      await auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+      await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPassword.value);
     } catch (error) {
       console.error(error);
-      setStatus('No s’ha pogut iniciar sessió. Torna-ho a provar.', 'error');
+      const messages = {
+        'auth/invalid-email': 'El correu no és vàlid.',
+        'auth/user-not-found': 'Aquest usuari no existeix.',
+        'auth/wrong-password': 'La contrasenya no és correcta.',
+        'auth/invalid-credential': 'El correu o la contrasenya no són correctes.',
+        'auth/too-many-requests': 'Hi ha massa intents. Torna-ho a provar més tard.'
+      };
+      loginError.textContent = messages[error.code] || 'No s’ha pogut iniciar la sessió.';
+    } finally {
+      loginButton.disabled = false;
+      loginButton.textContent = 'Entrar';
     }
   });
+  authButton.addEventListener('click', () => auth.signOut());
 
   auth.onAuthStateChanged(user => {
     if (dataRef) dataRef.off();
     dataRef = null;
     currentUser = user;
     if (!user) {
-      authButton.textContent = 'Inicia sessió amb Google';
-      setStatus('Les dades es desen en aquest dispositiu.');
+      showLogin();
       return;
     }
-    authButton.textContent = 'Tanca sessió';
-    setStatus(`Connectada com ${user.displayName || user.email}. Preparant la sincronització…`);
+    hideLogin();
+    setStatus(`Connectada com ${user.email}. Preparant la sincronització…`);
     dataRef = database.ref(`users/${user.uid}/diari`);
     dataRef.on('value', snapshot => {
       const remote = snapshot.val();
@@ -86,7 +108,7 @@
       setStatus('Dades sincronitzades amb el teu compte.', 'synced');
     }, error => {
       console.error(error);
-      setStatus('La base de dades encara no dona accés. Cal afegir les regles de seguretat.', 'error');
+      setStatus('La base de dades no dona accés. Revisa les regles de seguretat.', 'error');
     });
   });
 })();
