@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#315d42" />
     <title>Diari de Kombutxa</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=35" />
+    <link rel="stylesheet" href="styles.css?v=36" />
   </head>
   <body>
     <section id="login-screen" class="login-screen" aria-labelledby="login-title">
@@ -81,6 +81,8 @@
             <label>Consum preferent<input id="f3-best-before" type="date" /></label>
           </div>
           <label>Notes de conservació<textarea id="f3-notes" rows="2" placeholder="Filtrada, temperatura de nevera, observacions de consum..."></textarea></label>
+          <label class="file-label">Fotos de la conservació<input id="f3-photos" type="file" accept="image/*" multiple /></label>
+          <div id="f3-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f3" class="button primary" type="submit">Desa la conservació</button>
         </form>
       </section>
@@ -113,8 +115,8 @@
     </main>
     <template id="f1-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>Producció F1</h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><dl class="values"></dl><p class="recipe"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="pdf-button button secondary">PDF</button><button type="button" class="word-button button secondary">Word</button><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
-    <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="notes"></p></article></template>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=35"></script>
+    <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><div class="card-actions"><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><button type="button" class="edit-button button secondary">Edita</button><button type="button" class="delete-button">Elimina</button></div></div><p class="base"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=36"></script>
   </body>
 </html>
 
