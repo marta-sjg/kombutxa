@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#315d42" />
     <title>Diari de Kombutxa</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=55" />
+    <link rel="stylesheet" href="styles.css?v=56" />
   </head>
   <body>
     <section id="login-screen" class="login-screen" aria-labelledby="login-title">
@@ -51,11 +51,11 @@
       </section>
 
       <section class="panel form-panel tab-panel" data-view="production" data-phase-panel="f2" aria-labelledby="f2-title">
-        <div class="section-heading"><h2 id="f2-title">F2 · Nova prova</h2><button id="clear-f2" type="button" class="button secondary">Cancel·la / neteja</button></div>
+        <div class="section-heading"><h2 id="f2-title">F2 · Nou sabor</h2><button id="clear-f2" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <form id="f2-form">
           <div class="form-grid">
             <label>Base de F1<select id="f2-f1-id"><option value="">Sense vincular</option></select></label>
-            <label>Nom de la prova<input id="f2-name" required placeholder="Ex.: Maduixa i gingebre" /></label>
+            <label>Nom del sabor<input id="f2-name" required placeholder="Ex.: Maduixa i gingebre" /></label>
             <label>Data d'embotellat<input id="f2-date" type="date" required /></label>
             <label>Lot automàtic<input id="f2-lot" type="text" required /></label>
             <label>Quantitat F2 (L)<input id="f2-liters" type="number" step="0.1" min="0.1" required placeholder="1" /></label>
@@ -66,10 +66,10 @@
             <datalist id="ingredient-options"><option value="Maduixa"></option><option value="Fruits vermells"></option><option value="Poma"></option><option value="Taronja"></option><option value="Gingebre"></option><option value="Llimona"></option><option value="Menta"></option></datalist>
             <div id="f2-recipe" class="recipe-box" aria-live="polite">Indica quantitat i fruita per calcular la F2.</div>
           <label>Notes dels ingredients<textarea id="f2-ingredients" rows="2" placeholder="Ex.: pell de taronja, format de la fruita, ajustaments…"></textarea></label>
-          <label>Notes de la prova<textarea id="f2-notes" rows="3" placeholder="Color, olor, tast, gasificació, canvis observats..."></textarea></label>
-          <label class="file-label">Fotos de la prova<input id="f2-photos" type="file" accept="image/*" multiple /></label>
+          <label>Notes del sabor<textarea id="f2-notes" rows="3" placeholder="Color, olor, tast, gasificació, canvis observats..."></textarea></label>
+          <label class="file-label">Fotos del sabor<input id="f2-photos" type="file" accept="image/*" multiple /></label>
           <div id="f2-photo-preview" class="photo-preview" aria-live="polite"></div>
-          <button id="save-f2" class="button primary" type="submit">Desa la prova</button>
+          <button id="save-f2" class="button primary" type="submit">Desa el sabor</button>
         </form>
       </section>
 
@@ -77,7 +77,7 @@
         <div class="section-heading"><h2 id="f3-title">F3 · Conservació i consum</h2><button id="clear-f3" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <form id="f3-form">
           <div class="form-grid">
-            <label>Prova F2 d'origen<select id="f3-f2-id" required><option value="">Selecciona una F2</option></select></label>
+            <label>Sabor F2 d'origen<select id="f3-f2-id" required><option value="">Selecciona una F2</option></select></label>
             <label>Data de filtratge<input id="f3-date" type="date" required /></label>
             <label>Quantitat a la nevera (L)<input id="f3-liters" type="number" step="0.1" min="0.1" required placeholder="1" /></label>
             <label>Nombre d'ampolles<input id="f3-bottles" type="number" min="1" step="1" placeholder="4" /></label>
@@ -116,16 +116,16 @@
 
       <section class="registry-tools tab-panel" data-view="registry" aria-labelledby="registry-tools-title"><div class="section-heading"><div><h2 id="registry-tools-title">Registre</h2><p class="phase-help">Tria els registres que vulguis exportar.</p></div></div><div class="registry-summary" aria-label="Resum del registre"><button type="button" class="registry-summary-item" data-registry-button="f1"><strong id="summary-f1">0</strong><span>F1 · Producció</span></button><button type="button" class="registry-summary-item" data-registry-button="f2"><strong id="summary-f2">0</strong><span>F2 · Sabors</span></button><button type="button" class="registry-summary-item" data-registry-button="stock"><strong id="summary-stock">0</strong><span>F3 · En estoc</span></button><button type="button" class="registry-summary-item" data-registry-button="consumed"><strong id="summary-consumed">0</strong><span>F3 · Consumides</span></button></div><div class="registry-actions registry-controls"><label class="registry-control">Visualització<select id="registry-view-select"><option value="cards">Targetes</option><option value="list">Llista compacta</option></select></label><label class="registry-control">Selecció<select id="record-selection-action"><option value="">Tria els registres…</option><option value="all">Tots els registres</option><option value="f1">Només F1</option><option value="f2">Només F2</option><option value="f3">Només F3 en estoc</option><option value="clear">Neteja la selecció</option></select></label><label class="registry-control">Exporta<select id="record-export-action"><option value="">PDF o Word…</option><option value="pdf">PDF seleccionats</option><option value="word">Word seleccionats</option></select></label></div><p id="selection-help" class="selection-help" aria-live="polite">No hi ha cap registre seleccionat.</p></section>
       <section class="tab-panel" data-view="registry" data-registry-panel="f1" aria-labelledby="f1-list-title"><div class="section-heading"><h2 id="f1-list-title">Registre de F1</h2><span id="f1-count" class="count"></span></div><div id="f1-empty" class="empty-state">Encara no hi ha produccions de F1.</div><div id="f1-list" class="batch-list"></div></section>
-      <section class="tab-panel" data-view="registry" data-registry-panel="f2" aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de proves F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha proves de F2.</div><div id="f2-list" class="batch-list"></div></section>
+      <section class="tab-panel" data-view="registry" data-registry-panel="f2" aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de sabors F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha sabors F2.</div><div id="f2-list" class="batch-list"></div></section>
       <section class="tab-panel" data-view="registry" data-registry-panel="stock" aria-labelledby="f3-stock-list-title"><div class="section-heading"><h2 id="f3-stock-list-title">F3 · En estoc</h2><span id="f3-stock-count" class="count"></span></div><div id="f3-stock-empty" class="empty-state">No hi ha cap conservació en estoc.</div><div id="f3-stock-list" class="batch-list"></div></section>
       <section class="tab-panel" data-view="registry" data-registry-panel="consumed" aria-labelledby="f3-consumed-list-title"><div class="section-heading"><h2 id="f3-consumed-list-title">F3 · Consumides</h2><span id="f3-consumed-count" class="count"></span></div><div id="f3-consumed-empty" class="empty-state">Encara no hi ha cap F3 consumida.</div><div id="f3-consumed-list" class="batch-list"></div></section>
-      <section id="comparison-panel" class="comparison-panel tab-panel" data-view="registry" hidden aria-labelledby="comparison-title"><div class="section-heading"><h2 id="comparison-title">Comparació de proves F2</h2><button id="close-comparison" type="button" class="button secondary">Tanca</button></div><div id="comparison-table"></div></section>
+      <section id="comparison-panel" class="comparison-panel tab-panel" data-view="registry" hidden aria-labelledby="comparison-title"><div class="section-heading"><h2 id="comparison-title">Comparació de sabors F2</h2><button id="close-comparison" type="button" class="button secondary">Tanca</button></div><div id="comparison-table"></div></section>
     </main>
     <template id="f1-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>Producció F1</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><dl class="values"></dl><p class="recipe"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-consumed-template"><article class="batch-card consumed-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Consumida</h3></div><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita per corregir">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=55"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=56"></script>
   </body>
 </html>
 
