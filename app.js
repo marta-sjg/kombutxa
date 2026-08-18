@@ -110,3 +110,84 @@ async function exportSelectedWord() { const data=getData(),entries=chronological
 if (window.jspdf?.jsPDF) { const originalPdfText = window.jspdf.jsPDF.prototype.text, originalPdfRect = window.jspdf.jsPDF.prototype.rect; window.jspdf.jsPDF.prototype.text = function(text, ...args) { if (text === 'Registre de kombutxa' && this.getCurrentPageInfo().pageNumber > 1) return this; return originalPdfText.call(this, text, ...args); }; window.jspdf.jsPDF.prototype.rect = function(x, y, width, height, ...args) { if (x === 0 && y === 0 && width === 210 && height === 21 && this.getCurrentPageInfo().pageNumber > 1) return this; return originalPdfRect.call(this, x, y, width, height, ...args); }; }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-worker.js');
 
+/* Lots i registre sanitari: versió compacta */
+function lotCode(phase, now = new Date()) {
+  const pad = value => String(value).padStart(2, '0');
+  return `${phase}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+}
+function lotLabel(item) { return item.lot ? `Lot: ${item.lot}` : 'Lot: sense assignar'; }
+function formatRecordDate(value, prefix = '') { return `${prefix}${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'long' }).format(localDate(value))}`; }
+function valuesMarkup(values) { return values.filter(([, value]) => value).map(([label, value]) => `<div><dt>${label}</dt><dd> ${value}</dd></div>`).join(''); }
+function appendPhotos(node, photos, alt) { (photos || []).forEach(photo => { const image = new Image(); image.src = photo; image.alt = alt; node.querySelector('.gallery').append(image); }); }
+function bindSelection(node, key) { const check = node.querySelector('.record-check'); check.checked = selectedRecords.has(key); check.onchange = () => { check.checked ? selectedRecords.add(key) : selectedRecords.delete(key); updateSelectionHelp(); }; }
+
+function saveDraft() {
+  const saveFields = ids => ids.reduce((out, id) => ({ ...out, [id]: q(id).value }), {});
+  localStorage.setItem(draftKey, JSON.stringify({
+    f1: saveFields(['f1-date','f1-lot','f1-liters','f1-temperature','f1-ph','f1-days','f1-notes']),
+    f2: saveFields(['f2-f1-id','f2-name','f2-date','f2-lot','f2-liters','f2-days','f2-ingredients','f2-notes']),
+    f3: saveFields(['f3-f2-id','f3-date','f3-liters','f3-bottles','f3-lot','f3-storage-temperature','f3-status','f3-best-before','f3-consumed-date','f3-notes']),
+    components: formComponents()
+  }));
+}
+function resetF1() { editingF1 = null; pendingF1Photos = []; q('f1-form').reset(); q('f1-date').value = today(); q('f1-lot').value = lotCode('F1'); q('f1-title').textContent = 'F1 · Producció'; q('save-f1').textContent = 'Desa la producció'; showF1Photos(); updateRecipes(); }
+function resetF2() { editingF2 = null; pendingPhotos = []; q('f2-form').reset(); q('f2-date').value = today(); q('f2-lot').value = lotCode('F2'); q('f2-title').textContent = 'F2 · Nova prova'; q('save-f2').textContent = 'Desa la prova'; showPhotos(); renderComponents([{ name: 'Maduixa', rate: 100 }]); }
+function resetF3() { editingF3 = null; pendingF3Photos = []; q('f3-form').reset(); q('f3-date').value = today(); q('f3-lot').value = lotCode('F3'); q('f3-status').value = 'stock'; q('f3-title').textContent = 'F3 · Conservació i consum'; q('save-f3').textContent = 'Desa la conservació'; showF3Photos(); }
+
+function renderF1(data) {
+  const ordered = [...data.f1].sort((a, b) => b.date.localeCompare(a.date));
+  q('f1-count').textContent = ordered.length ? `${ordered.length} producció${ordered.length === 1 ? '' : 'ns'}` : '';
+  q('f1-empty').hidden = ordered.length > 0; q('f1-list').innerHTML = '';
+  ordered.forEach(item => {
+    const node = q('f1-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f1:${item.id}`;
+    card.id = `f1-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key);
+    node.querySelector('.card-date').textContent = formatRecordDate(item.date);
+    node.querySelector('.values').innerHTML = valuesMarkup([['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['Temperatura', item.temperature && `${item.temperature} °C`], ['pH', item.ph], ['Durada', item.days && `${item.days} dies`]]);
+    node.querySelector('.recipe').textContent = f1Recipe(Number(item.liters)); node.querySelector('.notes').textContent = item.notes ? `Notes: ${item.notes}` : '';
+    appendPhotos(node, item.photos, 'Foto de la producció F1'); node.querySelector('.edit-button').onclick = () => editF1(item); node.querySelector('.delete-button').onclick = () => remove('f1', item.id); q('f1-list').append(node);
+  });
+}
+function renderF2(data) {
+  const ordered = [...data.f2].sort((a, b) => b.date.localeCompare(a.date));
+  q('f2-count').textContent = ordered.length ? `${ordered.length} prova${ordered.length === 1 ? '' : 'es'}` : '';
+  q('f2-empty').hidden = ordered.length > 0; q('f2-list').innerHTML = '';
+  ordered.forEach(item => {
+    const components = item.components || [{ name: item.fruit || 'Fruita', rate: 100 }], node = q('f2-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f2:${item.id}`;
+    card.id = `f2-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key);
+    node.querySelector('h3').textContent = `F2 · ${item.name}`; node.querySelector('.card-date').textContent = formatRecordDate(item.date, 'Embotellada: ');
+    node.querySelector('.base').textContent = `Producte: ${item.name} · ${baseName(item.f1Id, data)}`;
+    node.querySelector('.values').innerHTML = valuesMarkup([['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['F2', item.days && `${item.days} dies`]]);
+    node.querySelector('.recipe').textContent = f2Recipe(Number(item.liters), components); node.querySelector('.ingredients').textContent = item.ingredients ? `Notes d’ingredients: ${item.ingredients}` : ''; node.querySelector('.notes').textContent = item.notes ? `Notes: ${item.notes}` : '';
+    appendPhotos(node, item.photos, `Foto de ${item.name}`); node.querySelector('.edit-button').onclick = () => editF2(item); node.querySelector('.delete-button').onclick = () => remove('f2', item.id); q('f2-list').append(node);
+  });
+}
+function renderF3Card(item, data, consumed) {
+  const node = q(consumed ? 'f3-consumed-template' : 'f3-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f3:${item.id}`, target = q(consumed ? 'f3-consumed-list' : 'f3-stock-list');
+  card.id = `f3-${item.id}`; enableRegistryCardExpansion(card); if (!consumed) bindSelection(node, key);
+  const product = f2ProductName(item.f2Id, data);
+  node.querySelector('h3').textContent = `F3 · ${product}`; node.querySelector('.card-date').textContent = formatRecordDate(item.date, 'Filtrada: ');
+  node.querySelector('.base').textContent = `Producte: ${product} · ${f2Name(item.f2Id, data)}`;
+  node.querySelector('.values').innerHTML = valuesMarkup([['Estat', consumed ? 'Consumida' : 'En estoc'], ['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['Ampolles', item.bottles], ['Temperatura', item.storageTemperature && `${item.storageTemperature} °C`], ['Consum preferent', item.bestBefore && new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.bestBefore))], ['Data de consum', item.consumedDate && new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.consumedDate))]]);
+  node.querySelector('.notes').textContent = item.notes ? `Notes: ${item.notes}` : ''; appendPhotos(node, item.photos, 'Foto de la conservació F3'); node.querySelector('.edit-button').onclick = () => editF3(item);
+  if (!consumed) node.querySelector('.delete-button').onclick = () => remove('f3', item.id); target.append(node);
+}
+function renderF3(data) {
+  const stock = data.f3.filter(item => (item.status || 'stock') !== 'consumed').sort((a, b) => b.date.localeCompare(a.date));
+  const consumed = data.f3.filter(item => item.status === 'consumed').sort((a, b) => (b.consumedDate || b.date).localeCompare(a.consumedDate || a.date));
+  [['stock', stock], ['consumed', consumed]].forEach(([type, items]) => { q(`f3-${type}-count`).textContent = items.length ? `${items.length} registre${items.length === 1 ? '' : 's'}` : ''; q(`f3-${type}-empty`).hidden = items.length > 0; q(`f3-${type}-list`).innerHTML = ''; items.forEach(item => renderF3Card(item, data, type === 'consumed')); });
+}
+function editF1(item) { editingF1 = item.id; [['f1-date',item.date],['f1-lot',item.lot || lotCode('F1')],['f1-liters',item.liters],['f1-temperature',item.temperature],['f1-ph',item.ph],['f1-days',item.days],['f1-notes',item.notes]].forEach(([id,value]) => q(id).value = value || ''); pendingF1Photos = [...(item.photos || [])]; q('f1-title').textContent = 'Edita la producció F1'; q('save-f1').textContent = 'Desa els canvis'; showF1Photos(); updateRecipes(); setView('production'); q('f1-form').scrollIntoView({ behavior: 'smooth' }); }
+function editF2(item) { editingF2 = item.id; [['f2-f1-id',item.f1Id],['f2-name',item.name],['f2-date',item.date],['f2-lot',item.lot || lotCode('F2')],['f2-liters',item.liters],['f2-days',item.days],['f2-ingredients',item.ingredients],['f2-notes',item.notes]].forEach(([id,value]) => q(id).value = value || ''); pendingPhotos = [...(item.photos || [])]; q('f2-title').textContent = 'Edita la prova F2'; q('save-f2').textContent = 'Desa els canvis'; showPhotos(); renderComponents(item.components || [{ name: item.fruit || 'Maduixa', rate: 100 }]); setView('production'); q('f2-form').scrollIntoView({ behavior: 'smooth' }); }
+function f1Report(item) { return [['Lot / referència',item.lot],['Data d’inici',new Intl.DateTimeFormat('ca-ES',{dateStyle:'long'}).format(localDate(item.date))],['Quantitat F1',`${item.liters} L`],['Recepta F1',f1Recipe(Number(item.liters))],['Temperatura',item.temperature && `${item.temperature} °C`],['pH',item.ph],['Durada',item.days && `${item.days} dies`],['Notes',item.notes]].filter(([,value]) => value); }
+function report(item, data) { const components = item.components || [{ name: item.fruit || 'Fruita', rate: 100 }]; return [['Producte',item.name],['Lot / referència',item.lot],['Base F1',baseName(item.f1Id,data)],['Data d’embotellat',new Intl.DateTimeFormat('ca-ES',{dateStyle:'long'}).format(localDate(item.date))],['Quantitat F2',`${item.liters} L`],['Recepta F2',f2Recipe(Number(item.liters),components)],['Durada de F2',item.days && `${item.days} dies`],['Notes d’ingredients',item.ingredients],['Notes',item.notes]].filter(([,v])=>v); }
+function f3Report(item, data) { return [['Producte',f2ProductName(item.f2Id,data)],['Estat',item.status === 'consumed' ? 'Consumida' : 'En estoc'],['Lot / referència',item.lot],['Prova F2 d’origen',f2Name(item.f2Id,data)],['Data de filtratge',new Intl.DateTimeFormat('ca-ES',{dateStyle:'long'}).format(localDate(item.date))],['Quantitat a la nevera',`${item.liters} L`],['Ampolles',item.bottles],['Temperatura de nevera',item.storageTemperature && `${item.storageTemperature} °C`],['Consum preferent',item.bestBefore && new Intl.DateTimeFormat('ca-ES',{dateStyle:'long'}).format(localDate(item.bestBefore))],['Data de consum',item.consumedDate && new Intl.DateTimeFormat('ca-ES',{dateStyle:'long'}).format(localDate(item.consumedDate))],['Notes',item.notes]].filter(([,value]) => value); }
+function registerTableRows(entries, data) { return entries.map(entry => { const item = entry.item, date = new Intl.DateTimeFormat('ca-ES',{dateStyle:'medium'}).format(localDate(item.date)); if (entry.type === 'f1') return [date,'F1',`Base de kombutxa · ${lotLabel(item)}`,`${item.liters} L`,[item.temperature && `${item.temperature} °C`,item.ph && `pH ${item.ph}`,item.days && `${item.days} dies`].filter(Boolean).join(' · ') || '—',item.notes || '—']; if (entry.type === 'f2') return [date,'F2',`Producte: ${item.name} · ${lotLabel(item)}`,`${item.liters} L`,item.days ? `${item.days} dies` : '—',[item.ingredients,item.notes].filter(Boolean).join(' · ') || '—']; return [date,'F3',`Producte: ${f2ProductName(item.f2Id,data)} · ${lotLabel(item)}`,`${item.liters} L`,item.status === 'consumed' ? `Consumida${item.consumedDate ? ` · ${new Intl.DateTimeFormat('ca-ES',{dateStyle:'medium'}).format(localDate(item.consumedDate))}` : ''}` : 'En estoc',item.notes || '—']; }); }
+function applyRegistryView() { ['f1-list','f2-list','f3-stock-list','f3-consumed-list'].forEach(id => q(id).classList.toggle('is-list', registryListMode)); q('registry-view-select').value = registryListMode ? 'list' : 'cards'; }
+function applySelectionAction(action) { const data = getData(); if (action === 'clear') { selectedRecords.clear(); q('comparison-table').innerHTML = ''; q('comparison-panel').hidden = true; } else if (action) { const types = action === 'all' ? ['f1','f2','f3'] : [action]; selectedRecords = new Set(types.flatMap(type => (type === 'f3' ? data.f3.filter(item => (item.status || 'stock') !== 'consumed') : data[type]).map(item => `${type}:${item.id}`))); } q('record-selection-action').value = ''; render(); }
+function applyRecordAction(action) { if (action !== 'consume') return; const data = getData(), ids = selectedItems(data).filter(entry => entry.type === 'f3' && (entry.item.status || 'stock') !== 'consumed').map(entry => entry.item.id); if (!ids.length) { alert('Selecciona almenys una F3 que estigui en estoc.'); return; } data.f3 = data.f3.map(item => ids.includes(item.id) ? { ...item, status: 'consumed', consumedDate: item.consumedDate || today() } : item); ids.forEach(id => selectedRecords.delete(`f3:${id}`)); saveData(data); render(); }
+
+q('f1-form').onsubmit = event => { event.preventDefault(); const data = getData(), item = { id: editingF1 || crypto.randomUUID(), date:q('f1-date').value, lot:q('f1-lot').value.trim(), liters:q('f1-liters').value, temperature:q('f1-temperature').value, ph:q('f1-ph').value, days:q('f1-days').value, notes:q('f1-notes').value.trim(), photos:pendingF1Photos }; data.f1 = editingF1 ? data.f1.map(x => x.id === editingF1 ? item : x) : [item, ...data.f1]; saveData(data); localStorage.removeItem(draftKey); resetF1(); render(); };
+q('f2-form').onsubmit = event => { event.preventDefault(); const data = getData(), item = { id: editingF2 || crypto.randomUUID(), f1Id:q('f2-f1-id').value, name:q('f2-name').value.trim(), date:q('f2-date').value, lot:q('f2-lot').value.trim(), liters:q('f2-liters').value, components:formComponents(), days:q('f2-days').value, ingredients:q('f2-ingredients').value.trim(), notes:q('f2-notes').value.trim(), photos:pendingPhotos }; data.f2 = editingF2 ? data.f2.map(x => x.id === editingF2 ? item : x) : [item, ...data.f2]; saveData(data); localStorage.removeItem(draftKey); resetF2(); render(); };
+q('f3-form').onsubmit = event => { event.preventDefault(); const data = getData(), status = q('f3-status').value, item = { id:editingF3 || crypto.randomUUID(), f2Id:q('f3-f2-id').value, date:q('f3-date').value, liters:q('f3-liters').value, bottles:q('f3-bottles').value, lot:q('f3-lot').value.trim(), storageTemperature:q('f3-storage-temperature').value, status, bestBefore:q('f3-best-before').value, consumedDate:status === 'consumed' ? q('f3-consumed-date').value || today() : '', notes:q('f3-notes').value.trim(), photos:pendingF3Photos }; data.f3 = editingF3 ? data.f3.map(x => x.id === editingF3 ? item : x) : [item, ...data.f3]; saveData(data); localStorage.removeItem(draftKey); resetF3(); render(); };
+q('record-action').onchange = () => { const action = q('record-action').value; q('record-action').value = ''; applyRecordAction(action); };
+
