@@ -170,7 +170,7 @@ function renderF3Card(item, data, consumed) {
   node.querySelector('.base').textContent = `Producte: ${product} · ${f2Name(item.f2Id, data)}`;
   node.querySelector('.values').innerHTML = valuesMarkup([['Estat', consumed ? 'Consumida' : 'En estoc'], ['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['Ampolles', item.bottles], ['Temperatura', item.storageTemperature && `${item.storageTemperature} °C`], ['Consum preferent', item.bestBefore && new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.bestBefore))], ['Data de consum', item.consumedDate && new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.consumedDate))]]);
   node.querySelector('.notes').textContent = item.notes ? `Notes: ${item.notes}` : ''; appendPhotos(node, item.photos, 'Foto de la conservació F3'); node.querySelector('.edit-button').onclick = () => editF3(item);
-  if (!consumed) node.querySelector('.delete-button').onclick = () => remove('f3', item.id); target.append(node);
+  node.querySelector('.delete-button').onclick = () => remove('f3', item.id); target.append(node);
 }
 function renderF3Updated(data) {
   const stock = data.f3.filter(item => (item.status || 'stock') !== 'consumed').sort((a, b) => b.date.localeCompare(a.date));
