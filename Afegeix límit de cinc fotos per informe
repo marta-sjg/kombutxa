@@ -209,3 +209,23 @@ q('f3-date').addEventListener('change', syncF3BestBefore);
 document.querySelectorAll('[data-registry-button]').forEach(button => button.onclick = () => setRegistryPanel(button.dataset.registryButton));
 if (!q('f3-lot').value.trim()) q('f3-lot').value = lotCode('F3');
 
+const maxPhotosPerReport = 5;
+function configurePhotoPicker(inputId, getPhotos, setPhotos, refresh) {
+  q(inputId).onchange = async () => {
+    const input = q(inputId), current = getPhotos(), available = maxPhotosPerReport - current.length;
+    if (available <= 0) { input.value = ''; alert('Aquest informe ja té el màxim de 5 fotos.'); return; }
+    const selected = [...input.files], files = selected.slice(0, available);
+    if (selected.length > available) alert(`Només s’afegiran ${available} foto${available === 1 ? '' : 's'}: el màxim per informe és de 5.`);
+    const photos = await Promise.all(files.map(compactPhoto));
+    setPhotos([...current, ...photos]);
+    input.value = '';
+    refresh();
+  };
+}
+configurePhotoPicker('f1-photos', () => pendingF1Photos, photos => { pendingF1Photos = photos; }, showF1Photos);
+configurePhotoPicker('f1-camera', () => pendingF1Photos, photos => { pendingF1Photos = photos; }, showF1Photos);
+configurePhotoPicker('f2-photos', () => pendingPhotos, photos => { pendingPhotos = photos; }, showPhotos);
+configurePhotoPicker('f2-camera', () => pendingPhotos, photos => { pendingPhotos = photos; }, showPhotos);
+configurePhotoPicker('f3-photos', () => pendingF3Photos, photos => { pendingF3Photos = photos; }, showF3Photos);
+configurePhotoPicker('f3-camera', () => pendingF3Photos, photos => { pendingF3Photos = photos; }, showF3Photos);
+
