@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#315d42" />
     <title>Diari de Kombutxa</title>
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="stylesheet" href="styles.css?v=56" />
+    <link rel="stylesheet" href="styles.css?v=57" />
   </head>
   <body>
     <section id="login-screen" class="login-screen" aria-labelledby="login-title">
@@ -44,7 +44,8 @@
           </div>
           <div id="f1-recipe" class="recipe-box" aria-live="polite">Introdueix els litres per calcular la recepta.</div>
           <label>Notes de producció<textarea id="f1-notes" rows="2" placeholder="Estat del SCOBY, olor, incidències..."></textarea></label>
-          <label class="file-label">Fotos de la producció<input id="f1-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fotos de la producció (màxim 5)<input id="f1-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fes una foto ara<input id="f1-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f1-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f1" class="button primary" type="submit">Desa la producció</button>
         </form>
@@ -67,7 +68,8 @@
             <div id="f2-recipe" class="recipe-box" aria-live="polite">Indica quantitat i fruita per calcular la F2.</div>
           <label>Notes dels ingredients<textarea id="f2-ingredients" rows="2" placeholder="Ex.: pell de taronja, format de la fruita, ajustaments…"></textarea></label>
           <label>Notes del sabor<textarea id="f2-notes" rows="3" placeholder="Color, olor, tast, gasificació, canvis observats..."></textarea></label>
-          <label class="file-label">Fotos del sabor<input id="f2-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fotos del sabor (màxim 5)<input id="f2-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fes una foto ara<input id="f2-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f2-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f2" class="button primary" type="submit">Desa el sabor</button>
         </form>
@@ -88,7 +90,8 @@
             <label>Data de consum<input id="f3-consumed-date" type="date" /></label>
           </div>
           <label>Notes de conservació<textarea id="f3-notes" rows="2" placeholder="Filtrada, temperatura de nevera, observacions de consum..."></textarea></label>
-          <label class="file-label">Fotos de la conservació<input id="f3-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fotos de la conservació (màxim 5)<input id="f3-photos" type="file" accept="image/*" multiple /></label>
+          <label class="file-label">Fes una foto ara<input id="f3-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f3-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f3" class="button primary" type="submit">Desa la conservació</button>
         </form>
@@ -125,7 +128,7 @@
     <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-consumed-template"><article class="batch-card consumed-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Consumida</h3></div><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita per corregir">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=56"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=57"></script>
   </body>
 </html>
 
