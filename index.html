@@ -12,26 +12,39 @@
     <section id="login-screen" class="login-screen" aria-labelledby="login-title">
       <form id="login-form" class="login-card">
         <img class="login-logo" src="logo.png" alt="Logotip de Marta" />
-        <p class="eyebrow">DIARI PRIVAT</p>
+        <p class="eyebrow">ACCÉS AL DIARI</p>
         <h1 id="login-title">Diari de kombutxa</h1>
-        <p>Entra amb el mateix correu i contrasenya al mòbil i a l’ordinador per veure les teves dades sincronitzades.</p>
+        <p>Entra per consultar el diari o, si ets MARTA, per administrar fermentacions, estoc i comandes.</p>
         <label>Correu electrònic<input id="login-email" type="email" autocomplete="email" required /></label>
         <label>Contrasenya<input id="login-password" type="password" autocomplete="current-password" required /></label>
         <p id="login-error" class="login-error" role="alert"></p>
         <button id="login-submit" class="button primary" type="submit">Entrar</button>
+        <button id="show-register" class="button secondary" type="button">Crea un compte de consulta</button>
+        <p id="login-help" class="login-help">Els comptes nous tenen accés de consulta i compra.</p>
+      </form>
+      <form id="register-form" class="login-card" hidden>
+        <img class="login-logo" src="logo.png" alt="Logotip de Marta" />
+        <p class="eyebrow">NOU COMPTE</p><h1>Crea el teu accés</h1>
+        <label>Nom<input id="register-name" autocomplete="name" required /></label>
+        <label>Correu electrònic<input id="register-email" type="email" autocomplete="email" required /></label>
+        <label>Contrasenya<input id="register-password" type="password" autocomplete="new-password" minlength="6" required /></label>
+        <p id="register-error" class="login-error" role="alert"></p>
+        <button id="register-submit" class="button primary" type="submit">Crear compte</button>
+        <button id="show-login" class="button secondary" type="button">Ja tinc un compte</button>
       </form>
     </section>
     <main class="app-shell">
       <header>
         <p class="eyebrow">FERMENTACIÓ ARTESANA</p>
         <div class="brand-line"><div class="brand-mark" style="display:flex;flex-direction:column;align-items:center;gap:0"><img class="brand-logo" src="logo.png" alt="Logotip de Marta" /><span>MARTA</span></div><h1><span>Diari de</span> <span>kombutxa</span></h1></div>
-        <div class="cloud-bar" aria-live="polite"><span id="cloud-status">Inicia sessió per sincronitzar les dades.</span><button id="auth-button" class="button secondary" type="button">Tanca sessió</button></div>
+        <div class="cloud-bar" aria-live="polite"><span id="cloud-status">Inicia sessió per sincronitzar les dades.</span><div class="header-actions"><button id="language-button" class="button secondary" type="button" aria-label="Canvia d'idioma">ES</button><button id="auth-button" class="button secondary" type="button">Tanca sessió</button></div></div>
+        <div id="order-notification" class="order-notification" hidden role="status"></div>
       </header>
 
-      <nav class="app-tabs" aria-label="Seccions del diari" role="tablist"><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="about">La kombutxa</button><button class="app-tab is-active" type="button" role="tab" aria-selected="true" data-view-button="production">Fermentacions</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="registry">Registre</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="calendar">Calendari</button></nav>
-      <nav class="production-subtabs" data-view="production" aria-label="Fases de fermentació"><button type="button" class="production-subtab is-active" data-phase-button="f1">F1 · Producció</button><button type="button" class="production-subtab" data-phase-button="f2">F2 · Sabors</button><button type="button" class="production-subtab" data-phase-button="f3">F3 · Conservació</button></nav>
+      <nav class="app-tabs" aria-label="Seccions del diari" role="tablist"><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="about">La kombutxa</button><button class="app-tab is-active admin-only" type="button" role="tab" aria-selected="true" data-view-button="production">Fermentacions</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="registry">Registre</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="calendar">Calendari</button><button class="app-tab" type="button" role="tab" aria-selected="false" data-view-button="purchase">Compra</button><button class="app-tab admin-only" type="button" role="tab" aria-selected="false" data-view-button="orders">Comandes</button></nav>
+      <nav class="production-subtabs admin-only" data-view="production" aria-label="Fases de fermentació"><button type="button" class="production-subtab is-active" data-phase-button="f1">F1 · Producció</button><button type="button" class="production-subtab" data-phase-button="f2">F2 · Sabors</button><button type="button" class="production-subtab" data-phase-button="f3">F3 · Conservació</button></nav>
 
-      <section class="panel form-panel tab-panel" data-view="production" data-phase-panel="f1" aria-labelledby="f1-title">
+      <section class="panel form-panel tab-panel admin-only" data-view="production" data-phase-panel="f1" aria-labelledby="f1-title">
         <div class="section-heading"><h2 id="f1-title">F1 · Producció</h2><button id="clear-f1" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <form id="f1-form">
           <div class="form-grid">
@@ -45,13 +58,12 @@
           <div id="f1-recipe" class="recipe-box" aria-live="polite">Introdueix els litres per calcular la recepta.</div>
           <label>Notes de producció<textarea id="f1-notes" rows="2" placeholder="Estat del SCOBY, olor, incidències..."></textarea></label>
           <label class="file-label">Fotos de la producció (màxim 5)<input id="f1-photos" type="file" accept="image/*" multiple /></label>
-          <label class="file-label">Fes una foto ara<input id="f1-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f1-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f1" class="button primary" type="submit">Desa la producció</button>
         </form>
       </section>
 
-      <section class="panel form-panel tab-panel" data-view="production" data-phase-panel="f2" aria-labelledby="f2-title">
+      <section class="panel form-panel tab-panel admin-only" data-view="production" data-phase-panel="f2" aria-labelledby="f2-title">
         <div class="section-heading"><h2 id="f2-title">F2 · Nou sabor</h2><button id="clear-f2" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <form id="f2-form">
           <div class="form-grid">
@@ -69,13 +81,12 @@
           <label>Notes dels ingredients<textarea id="f2-ingredients" rows="2" placeholder="Ex.: pell de taronja, format de la fruita, ajustaments…"></textarea></label>
           <label>Notes del sabor<textarea id="f2-notes" rows="3" placeholder="Color, olor, tast, gasificació, canvis observats..."></textarea></label>
           <label class="file-label">Fotos del sabor (màxim 5)<input id="f2-photos" type="file" accept="image/*" multiple /></label>
-          <label class="file-label">Fes una foto ara<input id="f2-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f2-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f2" class="button primary" type="submit">Desa el sabor</button>
         </form>
       </section>
 
-      <section class="panel form-panel tab-panel" data-view="production" data-phase-panel="f3" aria-labelledby="f3-title">
+      <section class="panel form-panel tab-panel admin-only" data-view="production" data-phase-panel="f3" aria-labelledby="f3-title">
         <div class="section-heading"><h2 id="f3-title">F3 · Conservació i consum</h2><button id="clear-f3" type="button" class="button secondary">Cancel·la / neteja</button></div>
         <form id="f3-form">
           <div class="form-grid">
@@ -91,7 +102,6 @@
           </div>
           <label>Notes de conservació<textarea id="f3-notes" rows="2" placeholder="Filtrada, temperatura de nevera, observacions de consum..."></textarea></label>
           <label class="file-label">Fotos de la conservació (màxim 5)<input id="f3-photos" type="file" accept="image/*" multiple /></label>
-          <label class="file-label">Fes una foto ara<input id="f3-camera" type="file" accept="image/*" capture="environment" /></label>
           <div id="f3-photo-preview" class="photo-preview" aria-live="polite"></div>
           <button id="save-f3" class="button primary" type="submit">Desa la conservació</button>
         </form>
@@ -104,6 +114,7 @@
 
       <section class="about-panel tab-panel" data-view="about" aria-labelledby="about-title">
         <p class="eyebrow">GUIA BREU</p><h2 id="about-title">Què és realment la kombutxa?</h2>
+        <section class="company-intro"><h3 id="company-title">La nostra història</h3><p id="company-copy">Som una petita empresa nascuda de la passió de la Marta per la fermentació. Tot va començar amb petites proves fetes a casa, escoltant els temps, els sabors i els cultius, fins a convertir-se en una botiga online petita i propera. Elaborem kombutxa artesana amb cura, transparència i ganes de compartir una manera més viva de beure.</p></section>
         <p class="about-lead">És te endolcit fermentat amb un cultiu de llevats i bacteris, sovint anomenat SCOBY. El resultat és una beguda àcida, amb sabor propi i, si no es pasteuritza, amb microorganismes vius.</p>
         <div class="about-grid">
           <article><h3>Els quatre ingredients</h3><p><strong>Aigua, te, sucre i SCOBY.</strong> El sucre no és només per endolcir: és l’aliment dels microorganismes durant la fermentació.</p></article>
@@ -117,6 +128,14 @@
         <p class="about-sources">Per aprofundir: <a href="https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety" target="_blank" rel="noreferrer">informació sobre probiòtics del NCCIH</a>.</p>
       </section>
 
+      <section class="purchase-panel tab-panel" data-view="purchase" aria-labelledby="purchase-title">
+        <div class="section-heading"><div><h2 id="purchase-title">Compra</h2><p class="phase-help">Selecciona un sabor disponible i envia la teva sol·licitud.</p></div></div>
+        <div id="purchase-stock" class="purchase-stock"></div>
+        <form id="purchase-form" class="purchase-form"><label>Producte<select id="purchase-f3-id" required><option value="">Selecciona un producte</option></select></label><label>Ampolles<input id="purchase-quantity" type="number" min="1" step="1" required value="1" /></label><button class="button primary" type="submit">Enviar sol·licitud</button><p id="purchase-message" class="selection-help" aria-live="polite"></p></form>
+        <section id="registered-users-panel" class="registered-users-panel admin-only" aria-labelledby="registered-users-title"><div class="section-heading"><h3 id="registered-users-title">Usuaris registrats</h3><span id="registered-users-count" class="count"></span></div><div id="registered-users-list" class="users-list"><p class="empty-state">Encara no hi ha usuaris registrats.</p></div></section>
+      </section>
+      <section id="purchase-orders-panel" class="purchase-panel tab-panel admin-only" data-view="orders" aria-labelledby="purchase-orders-title"><div class="section-heading"><div><h2 id="purchase-orders-title">Comandes rebudes</h2><p class="phase-help">Revisa les sol·licituds. En confirmar-les, les ampolles es descompten de l’estoc.</p></div><span id="purchase-orders-count" class="count"></span></div><div id="purchase-orders-list" class="users-list"><p class="empty-state">Encara no hi ha sol·licituds.</p></div></section>
+
       <section class="registry-tools tab-panel" data-view="registry" aria-labelledby="registry-tools-title"><div class="section-heading"><div><h2 id="registry-tools-title">Registre</h2><p class="phase-help">Tria els registres que vulguis exportar.</p></div></div><div class="registry-summary" aria-label="Resum del registre"><button type="button" class="registry-summary-item" data-registry-button="f1"><strong id="summary-f1">0</strong><span>F1 · Producció</span></button><button type="button" class="registry-summary-item" data-registry-button="f2"><strong id="summary-f2">0</strong><span>F2 · Sabors</span></button><button type="button" class="registry-summary-item" data-registry-button="stock"><strong id="summary-stock">0</strong><span>F3 · En estoc</span></button><button type="button" class="registry-summary-item" data-registry-button="consumed"><strong id="summary-consumed">0</strong><span>F3 · Consumides</span></button></div><div class="registry-actions registry-controls"><label class="registry-control">Visualització<select id="registry-view-select"><option value="cards">Targetes</option><option value="list">Llista compacta</option></select></label><label class="registry-control">Selecció<select id="record-selection-action"><option value="">Tria els registres…</option><option value="all">Tots els registres</option><option value="f1">Només F1</option><option value="f2">Només F2</option><option value="f3">Només F3 en estoc</option><option value="clear">Neteja la selecció</option></select></label><label class="registry-control">Exporta<select id="record-export-action"><option value="">PDF o Word…</option><option value="pdf">PDF seleccionats</option><option value="word">Word seleccionats</option></select></label></div><p id="selection-help" class="selection-help" aria-live="polite">No hi ha cap registre seleccionat.</p></section>
       <section class="tab-panel" data-view="registry" data-registry-panel="f1" aria-labelledby="f1-list-title"><div class="section-heading"><h2 id="f1-list-title">Registre de F1</h2><span id="f1-count" class="count"></span></div><div id="f1-empty" class="empty-state">Encara no hi ha produccions de F1.</div><div id="f1-list" class="batch-list"></div></section>
       <section class="tab-panel" data-view="registry" data-registry-panel="f2" aria-labelledby="f2-list-title"><div class="section-heading"><h2 id="f2-list-title">Informes de sabors F2</h2><span id="f2-count" class="count"></span></div><div id="f2-empty" class="empty-state">Encara no hi ha sabors F2.</div><div id="f2-list" class="batch-list"></div></section>
@@ -128,7 +147,6 @@
     <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-consumed-template"><article class="batch-card consumed-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Consumida</h3></div><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita per corregir">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js"></script><script src="app.js?v=57"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js?v=60"></script><script src="app.js?v=60"></script>
   </body>
 </html>
-
