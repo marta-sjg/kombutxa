@@ -44,7 +44,7 @@ function showF1Photos() { const preview = q('f1-photo-preview'); preview.innerHT
 function showF3Photos() { const preview = q('f3-photo-preview'); preview.innerHTML = ''; pendingF3Photos.forEach((source, index) => { const wrap = document.createElement('div'), image = new Image(), button = document.createElement('button'); image.src = source; image.alt = 'Foto de la conservació'; button.type = 'button'; button.className = 'delete-button'; button.textContent = '×'; button.onclick = () => { pendingF3Photos.splice(index, 1); showF3Photos(); }; wrap.append(image, button); preview.append(wrap); }); }
 function baseName(id, data) { const base = data.f1.find(item => item.id === id); return base ? `Base F1: ${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(base.date))} · ${base.liters} L · Lot ${base.lot || 'sense lot'}` : 'Base F1: sense vincular'; }
 
-function renderSelectors(data) { const select = q('f2-f1-id'), selected = select.value; select.innerHTML = '<option value="">Sense vincular</option>'; data.f1.forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = `${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.date))} · ${item.liters} L`; select.append(option); }); select.value = selected; const f3Select = q('f3-f2-id'), f3Selected = f3Select.value, isAlreadyStored = f2 => data.f3.some(conservation => conservation.f2Id === f2.id && conservation.id !== editingF3); f3Select.innerHTML = '<option value="">Selecciona una F2</option>'; [...data.f2].filter(item => !isAlreadyStored(item)).sort((a,b) => b.date.localeCompare(a.date)).forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = `${item.name} · ${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.date))} · ${item.liters} L`; f3Select.append(option); }); f3Select.value = f3Selected; }
+function renderSelectors(data) { const select = q('f2-f1-id'), selected = select.value, editingBaseId = data.f2.find(item => item.id === editingF2)?.f1Id, f1AlreadyMovedToF3 = f1 => data.f2.some(f2 => f2.f1Id === f1.id && data.f3.some(f3 => f3.f2Id === f2.id)); select.innerHTML = '<option value="">Sense vincular</option>'; data.f1.filter(item => item.id === editingBaseId || !f1AlreadyMovedToF3(item)).forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = `${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.date))} · ${item.liters} L`; select.append(option); }); select.value = selected; const f3Select = q('f3-f2-id'), f3Selected = f3Select.value, isAlreadyStored = f2 => data.f3.some(conservation => conservation.f2Id === f2.id && conservation.id !== editingF3); f3Select.innerHTML = '<option value="">Selecciona una F2</option>'; [...data.f2].filter(item => !isAlreadyStored(item)).sort((a,b) => b.date.localeCompare(a.date)).forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = `${item.name} · ${new Intl.DateTimeFormat('ca-ES', { dateStyle: 'medium' }).format(localDate(item.date))} · ${item.liters} L`; f3Select.append(option); }); f3Select.value = f3Selected; }
 function render() {
   const data = getData(); renderSelectors(data); renderF1(data); renderF2(data); renderF3(data); renderCalendar(data); updateSelectionHelp(); applyRegistryView();
 }
@@ -113,8 +113,9 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('./service-wo
 
 /* Lots i registre sanitari: versió compacta */
 function lotCode(phase, now = new Date()) {
-  const pad = value => String(value).padStart(2, '0');
-  return `${phase}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const pad = value => String(value).padStart(2, '0'), prefix = `${phase}-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+  const data = getData(), existing = (data[phase.toLowerCase()] || []).filter(item => String(item.lot || '').startsWith(prefix)).length;
+  return `${prefix}-${pad(existing + 1)}`;
 }
 function sixMonthsAfter(dateValue) { if (!dateValue) return ''; const [year, month, day] = dateValue.split('-').map(Number), targetMonth = month - 1 + 6, lastDay = new Date(year, targetMonth + 1, 0).getDate(), result = new Date(year, targetMonth, Math.min(day, lastDay)); return `${result.getFullYear()}-${String(result.getMonth() + 1).padStart(2,'0')}-${String(result.getDate()).padStart(2,'0')}`; }
 function syncF3BestBefore() { q('f3-best-before').value = sixMonthsAfter(q('f3-date').value); }
@@ -136,6 +137,7 @@ function saveDraftUpdated() {
 function resetF1Updated() { editingF1 = null; pendingF1Photos = []; q('f1-form').reset(); q('f1-date').value = today(); q('f1-lot').value = lotCode('F1'); q('f1-title').textContent = 'F1 · Producció'; q('save-f1').textContent = 'Desa la producció'; showF1Photos(); updateRecipes(); }
 function resetF2Updated() { editingF2 = null; pendingPhotos = []; q('f2-form').reset(); q('f2-date').value = today(); q('f2-lot').value = lotCode('F2'); q('f2-title').textContent = 'F2 · Nou sabor'; q('save-f2').textContent = 'Desa el sabor'; showPhotos(); renderComponents([{ name: 'Maduixa', rate: 100 }]); }
 function resetF3Updated() { editingF3 = null; pendingF3Photos = []; q('f3-form').reset(); q('f3-date').value = today(); q('f3-lot').value = lotCode('F3'); syncF3BestBefore(); q('f3-status').value = 'stock'; q('f3-title').textContent = 'F3 · Conservació i consum'; q('save-f3').textContent = 'Desa la conservació'; showF3Photos(); }
+function addPhaseStatus(node, text, type = '') { const badge = document.createElement('span'); badge.className = `phase-status ${type}`; badge.textContent = text; node.querySelector('.card-top').append(badge); }
 
 function renderF1Updated(data) {
   const ordered = [...data.f1].sort((a, b) => b.date.localeCompare(a.date));
@@ -143,7 +145,7 @@ function renderF1Updated(data) {
   q('f1-empty').hidden = ordered.length > 0; q('f1-list').innerHTML = '';
   ordered.forEach(item => {
     const node = q('f1-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f1:${item.id}`;
-    card.id = `f1-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key);
+    card.id = `f1-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key); addPhaseStatus(node, data.f2.some(f2 => f2.f1Id === item.id) ? 'Utilitzada a F2' : 'En procés', data.f2.some(f2 => f2.f1Id === item.id) ? 'is-used' : '');
     node.querySelector('.card-date').textContent = formatRecordDate(item.date);
     node.querySelector('.values').innerHTML = valuesMarkup([['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['Temperatura', item.temperature && `${item.temperature} °C`], ['pH', item.ph], ['Durada', item.days && `${item.days} dies`]]);
     node.querySelector('.recipe').textContent = f1Recipe(Number(item.liters)); node.querySelector('.notes').textContent = item.notes ? `Notes: ${item.notes}` : '';
@@ -156,7 +158,7 @@ function renderF2Updated(data) {
   q('f2-empty').hidden = ordered.length > 0; q('f2-list').innerHTML = '';
   ordered.forEach(item => {
     const components = item.components || [{ name: item.fruit || 'Fruita', rate: 100 }], node = q('f2-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f2:${item.id}`;
-    card.id = `f2-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key);
+    card.id = `f2-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key); addPhaseStatus(node, data.f3.some(f3 => f3.f2Id === item.id) ? 'Passada a F3' : 'En procés', data.f3.some(f3 => f3.f2Id === item.id) ? 'is-used' : '');
     node.querySelector('h3').textContent = `F2 · ${item.name}`; node.querySelector('.card-date').textContent = formatRecordDate(item.date, 'Embotellada: ');
     node.querySelector('.base').textContent = `Producte: ${item.name} · ${baseName(item.f1Id, data)}`;
     node.querySelector('.values').innerHTML = valuesMarkup([['Lot', item.lot || 'Sense lot'], ['Quantitat', `${item.liters} L`], ['F2', item.days && `${item.days} dies`]]);
@@ -166,7 +168,7 @@ function renderF2Updated(data) {
 }
 function renderF3Card(item, data, consumed) {
   const node = q(consumed ? 'f3-consumed-template' : 'f3-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f3:${item.id}`, target = q(consumed ? 'f3-consumed-list' : 'f3-stock-list');
-  card.id = `f3-${item.id}`; enableRegistryCardExpansion(card); if (!consumed) bindSelection(node, key);
+  card.id = `f3-${item.id}`; enableRegistryCardExpansion(card); if (!consumed) { bindSelection(node, key); addPhaseStatus(node, 'En estoc', 'is-stock'); }
   const product = f2ProductName(item.f2Id, data), f2 = data.f2.find(batch => batch.id === item.f2Id), f1 = f2 && data.f1.find(batch => batch.id === f2.f1Id), ingredientList = (f2?.components || []).map(component => component.name).filter(Boolean).join(', ');
   node.querySelector('h3').textContent = `F3 · ${product}`; node.querySelector('.card-date').textContent = formatRecordDate(item.date, 'Filtrada: ');
   node.querySelector('.base').textContent = `Producte: ${product} · ${f2Name(item.f2Id, data)}`;
@@ -223,9 +225,118 @@ function configurePhotoPicker(inputId, getPhotos, setPhotos, refresh) {
   };
 }
 configurePhotoPicker('f1-photos', () => pendingF1Photos, photos => { pendingF1Photos = photos; }, showF1Photos);
-configurePhotoPicker('f1-camera', () => pendingF1Photos, photos => { pendingF1Photos = photos; }, showF1Photos);
 configurePhotoPicker('f2-photos', () => pendingPhotos, photos => { pendingPhotos = photos; }, showPhotos);
-configurePhotoPicker('f2-camera', () => pendingPhotos, photos => { pendingPhotos = photos; }, showPhotos);
 configurePhotoPicker('f3-photos', () => pendingF3Photos, photos => { pendingF3Photos = photos; }, showF3Photos);
-configurePhotoPicker('f3-camera', () => pendingF3Photos, photos => { pendingF3Photos = photos; }, showF3Photos);
 
+let registeredUsers = [], purchaseOrders = [];
+const isAdmin = () => document.body.dataset.userRole !== 'viewer';
+function applyUserRole(role) {
+  const viewer = role === 'viewer';
+  document.body.dataset.userRole = viewer ? 'viewer' : 'admin';
+  document.body.classList.toggle('viewer-mode', viewer);
+  q('auth-button').textContent = viewer ? 'Canvia d’usuari' : 'Tanca sessió';
+  if (viewer && document.querySelector('[data-view-button="production"]')?.classList.contains('is-active')) setView('about');
+  if (viewer) document.querySelectorAll('.values div').forEach(value => { if (value.querySelector('dt')?.textContent.trim().toLowerCase().startsWith('lot')) value.remove(); });
+}
+function renderPurchase(data) {
+  const available = data.f3.filter(item => (item.status || 'stock') !== 'consumed' && Number(item.bottles || 0) > 0);
+  const stock = q('purchase-stock'), select = q('purchase-f3-id'), selected = select.value;
+  stock.innerHTML = available.length ? available.map(item => `<article class="purchase-item"><h3>${escapeHtml(f2ProductName(item.f2Id, data))}</h3><p>${item.bottles} ampolles disponibles</p><p>Consum preferent: ${item.bestBefore ? new Intl.DateTimeFormat('ca-ES',{dateStyle:'medium'}).format(localDate(item.bestBefore)) : 'consulta’ns'}</p></article>`).join('') : '<div class="empty-state">Ara mateix no hi ha productes disponibles.</div>';
+  select.innerHTML = '<option value="">Selecciona un producte</option>';
+  available.forEach(item => { const option = document.createElement('option'); option.value = item.id; option.textContent = `${f2ProductName(item.f2Id, data)} · ${item.bottles} ampolles`; select.append(option); });
+  select.value = selected;
+}
+function renderRegisteredUsers() {
+  const list = q('registered-users-list'); if (!list) return;
+  q('registered-users-count').textContent = registeredUsers.length ? `${registeredUsers.length} usuaris` : '';
+  list.innerHTML = registeredUsers.length ? registeredUsers.map(user => `<article class="user-row"><div><strong>${escapeHtml(user.name || 'Sense nom')}</strong><p>${escapeHtml(user.email || '')}</p></div><span>${user.registeredAt ? new Intl.DateTimeFormat('ca-ES',{dateStyle:'medium'}).format(new Date(user.registeredAt)) : ''}</span></article>`).join('') : '<p class="empty-state">Encara no hi ha usuaris registrats.</p>';
+}
+function renderPurchaseOrders() {
+  const list = q('purchase-orders-list'); if (!list) return;
+  const pending = purchaseOrders.filter(order => order.status === 'pending');
+  q('purchase-orders-count').textContent = pending.length ? `${pending.length} pendents` : '';
+  list.innerHTML = purchaseOrders.length ? purchaseOrders.map(order => {
+    const f3 = getData().f3.find(item => item.id === order.f3Id);
+    const product = f2ProductName(f3?.f2Id, getData());
+    const state = order.status === 'confirmed' ? 'Confirmada' : order.status === 'cancelled' ? 'Cancel·lada' : 'Pendent';
+    return `<article class="user-row"><div><strong>${escapeHtml(product)} · ${escapeHtml(order.quantity)} ampolles</strong><p>${escapeHtml(order.email || 'Usuari')} · ${escapeHtml(order.notes || 'Sense notes')}</p><p>${state}</p></div>${order.status === 'pending' ? `<div class="purchase-order-actions"><button class="button primary" type="button" data-order-confirm="${order.id}" data-order-user="${order.userId}">Confirma</button><button class="button secondary" type="button" data-order-cancel="${order.id}" data-order-user="${order.userId}">Cancel·la</button></div>` : ''}</article>`;
+  }).join('') : '<p class="empty-state">Encara no hi ha sol·licituds.</p>';
+  list.querySelectorAll('[data-order-confirm]').forEach(button => button.onclick = async () => {
+    const order = purchaseOrders.find(item => item.id === button.dataset.orderConfirm && item.userId === button.dataset.orderUser); if (!order) return;
+    try { await window.kombutxaOrders.update(order, 'confirmed'); } catch (error) { alert(error.message || 'No s’ha pogut confirmar la sol·licitud.'); }
+  });
+  list.querySelectorAll('[data-order-cancel]').forEach(button => button.onclick = async () => {
+    const order = purchaseOrders.find(item => item.id === button.dataset.orderCancel && item.userId === button.dataset.orderUser); if (!order) return;
+    try { await window.kombutxaOrders.update(order, 'cancelled'); } catch (error) { alert(error.message || 'No s’ha pogut cancel·lar la sol·licitud.'); }
+  });
+}
+window.addEventListener('kombutxa-role-change', event => { applyUserRole(event.detail?.role); render(); });
+window.addEventListener('kombutxa-users-change', event => { registeredUsers = event.detail?.users || []; renderRegisteredUsers(); });
+window.addEventListener('kombutxa-orders-change', event => { purchaseOrders = event.detail?.orders || []; renderPurchaseOrders(); });
+q('purchase-form').onsubmit = async event => {
+  event.preventDefault(); const message = q('purchase-message');
+  try { await window.kombutxaOrders?.place({ f3Id:q('purchase-f3-id').value, quantity:Number(q('purchase-quantity').value) }); message.textContent = 'Sol·licitud enviada. Et contactarem per confirmar-la.'; event.currentTarget.reset(); }
+  catch (error) { message.textContent = error.message || 'No s’ha pogut enviar la sol·licitud.'; }
+};
+const renderBeforePurchase = render;
+render = function () { renderBeforePurchase(); renderPurchase(getData()); renderRegisteredUsers(); renderPurchaseOrders(); if (!isAdmin()) applyUserRole('viewer'); };
+const setViewBeforeRole = setView;
+setView = function (view) { setViewBeforeRole(!isAdmin() && view === 'production' ? 'about' : view); };
+
+/* Consulta en castellà, avís de comandes i inici públic. */
+let currentLanguage = localStorage.getItem('diari-kombutxa-language') || 'ca';
+const languageCopy = {
+  ca: { aboutTab: 'La kombutxa', registryTab: 'Registre', calendarTab: 'Calendari', purchaseTab: 'Compra', aboutTitle: 'Què és realment la kombutxa?', companyTitle: 'La nostra història', company: 'Som una petita empresa nascuda de la passió de la Marta per la fermentació. Tot va començar amb petites proves fetes a casa, escoltant els temps, els sabors i els cultius, fins a convertir-se en una botiga online petita i propera. Elaborem kombutxa artesana amb cura, transparència i ganes de compartir una manera més viva de beure.', purchaseTitle: 'Compra', purchaseHelp: 'Selecciona un sabor disponible i envia la teva sol·licitud.', logout: 'Tanca sessió', changeUser: 'Canvia d’usuari', lead: 'És te endolcit fermentat amb un cultiu de llevats i bacteris, sovint anomenat SCOBY. El resultat és una beguda àcida, amb sabor propi i, si no es pasteuritza, amb microorganismes vius.' },
+  es: { aboutTab: 'La kombucha', registryTab: 'Registro', calendarTab: 'Calendario', purchaseTab: 'Comprar', aboutTitle: '¿Qué es realmente la kombucha?', companyTitle: 'Nuestra historia', company: 'Somos una pequeña empresa nacida de la pasión de Marta por la fermentación. Todo empezó con pequeñas pruebas hechas en casa, escuchando los tiempos, los sabores y los cultivos, hasta convertirse en una tienda online pequeña y cercana. Elaboramos kombucha artesanal con cuidado, transparencia y ganas de compartir una forma más viva de beber.', purchaseTitle: 'Comprar', purchaseHelp: 'Selecciona un sabor disponible y envía tu solicitud.', logout: 'Cerrar sesión', changeUser: 'Cambiar de usuario', lead: 'Es té endulzado fermentado con un cultivo de levaduras y bacterias, a menudo llamado SCOBY. El resultado es una bebida ácida, con sabor propio y, si no se pasteuriza, con microorganismos vivos.' }
+};
+function applyLanguage(save = false) {
+  const copy = languageCopy[currentLanguage]; document.documentElement.lang = currentLanguage;
+  q('language-button').textContent = currentLanguage === 'ca' ? 'ES' : 'CA';
+  document.querySelector('[data-view-button="about"]').textContent = copy.aboutTab;
+  document.querySelector('[data-view-button="registry"]').textContent = copy.registryTab;
+  document.querySelector('[data-view-button="calendar"]').textContent = copy.calendarTab;
+  document.querySelector('[data-view-button="purchase"]').textContent = copy.purchaseTab;
+  q('about-title').textContent = copy.aboutTitle; q('company-title').textContent = copy.companyTitle; q('company-copy').textContent = copy.company;
+  q('purchase-title').textContent = copy.purchaseTitle; document.querySelector('#purchase-title + p').textContent = copy.purchaseHelp; document.querySelector('.about-lead').textContent = copy.lead;
+  const aboutCards = currentLanguage === 'es' ? [['Los cuatro ingredientes','<strong>Agua, té, azúcar y SCOBY.</strong> El azúcar no solo endulza: es el alimento de los microorganismos durante la fermentación.'],['El SCOBY','Es una capa de celulosa que forman sobre todo las bacterias acéticas. Actúa como casa del cultivo, aunque el líquido también contiene microorganismos activos.'],['¿Qué ocurre en F1?','Las levaduras transforman parte del azúcar en CO₂ y alcohol. Después, las bacterias transforman parte del alcohol en ácidos orgánicos; por eso la bebida se vuelve más ácida.'],['¿Qué ocurre en F2?','Al añadir fruta o aromas y cerrar la botella, los azúcares disponibles generan más CO₂. Así se crea la gasificación natural y se intensifica el sabor.']] : [['Els quatre ingredients','<strong>Aigua, te, sucre i SCOBY.</strong> El sucre no és només per endolcir: és l’aliment dels microorganismes durant la fermentació.'],['El SCOBY','És una capa de cel·lulosa que formen sobretot els bacteris acètics. Actua com a casa del cultiu, però el líquid també conté microorganismes actius.'],['Què passa a la F1?','Els llevats transformen una part del sucre en CO₂ i alcohol. Després, els bacteris transformen part de l’alcohol en àcids orgànics; per això la beguda es torna més àcida.'],['Què passa a la F2?','En afegir fruita o aromes i tancar l’ampolla, els sucres disponibles generen més CO₂. Això crea la gasificació natural i intensifica el sabor.']];
+  document.querySelectorAll('.about-grid article').forEach((card, index) => { card.innerHTML = `<h3>${aboutCards[index][0]}</h3><p>${aboutCards[index][1]}</p>`; });
+  q('auth-button').textContent = isAdmin() ? copy.logout : copy.changeUser;
+  if (save) localStorage.setItem('diari-kombutxa-language', currentLanguage);
+}
+q('language-button').onclick = () => { currentLanguage = currentLanguage === 'ca' ? 'es' : 'ca'; applyLanguage(true); };
+let firstOrderLoad = true, knownPendingOrderIds = new Set();
+window.addEventListener('kombutxa-orders-change', event => {
+  if (!isAdmin()) return;
+  const pending = (event.detail?.orders || []).filter(order => order.status === 'pending'), nextIds = new Set(pending.map(order => `${order.userId}:${order.id}`));
+  const newOrders = firstOrderLoad ? [] : pending.filter(order => !knownPendingOrderIds.has(`${order.userId}:${order.id}`));
+  knownPendingOrderIds = nextIds; firstOrderLoad = false;
+  const notification = q('order-notification');
+  notification.hidden = !pending.length;
+  if (pending.length) notification.textContent = newOrders.length ? `Tens ${newOrders.length} comanda${newOrders.length === 1 ? '' : 'es'} nova${newOrders.length === 1 ? '' : 'es'}! En total tens ${pending.length} sol·licitud${pending.length === 1 ? '' : 's'} pendent${pending.length === 1 ? '' : 's'}.` : `Tens ${pending.length} sol·licitud${pending.length === 1 ? '' : 's'} de compra pendent${pending.length === 1 ? '' : 's'}.`;
+});
+q('order-notification').onclick = () => setView('orders');
+const renderBeforeLanguage = render;
+render = function () { renderBeforeLanguage(); applyLanguage(); };
+applyLanguage(); setView('about');
+
+/* Exportació sanitària amb una taula per fase i miniatures de les fotos. */
+function selectedPhotoEntries(data) { return chronologicalEntries(data).filter(entry => (entry.item.photos || []).length); }
+async function exportSelectedPdf() {
+  const data = getData(), entries = chronologicalEntries(data); if (!entries.length) { alert('Selecciona almenys un registre.'); return; }
+  const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' }), headers = ['Data','Fase','Producte / lot','Quantitat','Estat','Notes'], widths = [20,12,37,20,28,67]; let y = 29;
+  const header = () => { doc.setFillColor(49,93,66); doc.rect(0,0,210,19,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.text('Registre de kombutxa · MARTA',14,12); };
+  const nextPage = () => { doc.addPage(); y = 24; };
+  const title = text => { if (y > 265) nextPage(); doc.setFillColor(49,93,66); doc.roundedRect(14,y,182,8,2,2,'F'); doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.text(text,18,y + 5.4); y += 8; };
+  const tableHeader = () => { let x = 14; headers.forEach((label, index) => { doc.setFillColor(232,238,229); doc.rect(x,y,widths[index],7,'F'); doc.setTextColor(37,50,40); doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.text(label,x+2,y+4.5); x += widths[index]; }); y += 7; };
+  const row = (values, index) => { const lines = values.map((value, i) => doc.splitTextToSize(String(value), widths[i]-4)), height = Math.max(8, ...lines.map(line => line.length * 3.5 + 3)); if (y + height > 280) { nextPage(); tableHeader(); } let x = 14; values.forEach((value, i) => { doc.setFillColor(index % 2 ? 250 : 247,index % 2 ? 248 : 244,index % 2 ? 240 : 235); doc.rect(x,y,widths[i],height,'F'); doc.setDrawColor(216,210,195); doc.rect(x,y,widths[i],height,'S'); doc.setTextColor(37,50,40); doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.text(lines[i],x+2,y+4.5); x += widths[i]; }); y += height; };
+  header(); [['f1','F1 · Producció'],['f2','F2 · Sabors'],['f3','F3 · Conservació']].forEach(([type,label]) => { const group = entries.filter(entry => entry.type === type); if (!group.length) return; title(label); tableHeader(); registerTableRows(group,data).map(([date, phase, product, lot, quantity, state, notes]) => [date, phase, `${product}\n${lot}`, quantity, state, notes]).forEach(row); y += 7; });
+  const photos = selectedPhotoEntries(data); if (photos.length) { nextPage(); header(); y = 28; title('Fotos dels registres seleccionats'); for (const entry of photos) { if (y > 256) { nextPage(); header(); y = 28; } doc.setTextColor(37,50,40); doc.setFont('helvetica','bold'); doc.setFontSize(9); const name = entry.type === 'f2' ? entry.item.name : entry.type === 'f3' ? f2ProductName(entry.item.f2Id,data) : 'Producció F1'; doc.text(`${entry.type.toUpperCase()} · ${name}`,14,y); y += 5; let x = 14; for (const photo of entry.item.photos) { const size = await imageSize(photo), scale = Math.min(52 / size.width, 38 / size.height, 1), width = size.width * scale, height = size.height * scale; if (x + width > 196) { x = 14; y += 43; } if (y + height > 279) { nextPage(); header(); y = 28; } doc.addImage(photo,photo.startsWith('data:image/png')?'PNG':'JPEG',x,y,width,height); x += width + 4; } y += 45; } }
+  const count = doc.getNumberOfPages(); for (let page = 1; page <= count; page++) { doc.setPage(page); doc.setTextColor(49,93,66); doc.setFontSize(8); doc.text(`${page}/${count}`,184,290); } doc.save('registre-kombutxa-sanitat.pdf');
+}
+async function exportSelectedWord() {
+  const data = getData(), entries = chronologicalEntries(data); if (!entries.length) { alert('Selecciona almenys un registre.'); return; } if (!window.docx) { alert('No s’ha pogut carregar l’exportació Word.'); return; }
+  const { Document, Packer, Paragraph, TextRun, ImageRun } = window.docx, children = [new Paragraph({children:[new TextRun({text:'Registre de kombutxa',bold:true,size:34,color:'315D42'})],spacing:{after:80}})];
+  [['f1','F1 · Producció'],['f2','F2 · Sabors'],['f3','F3 · Conservació']].forEach(([type,label]) => { const group = entries.filter(entry => entry.type === type); if (group.length) children.push(new Paragraph({children:[new TextRun({text:label,bold:true,size:24,color:'315D42'})],spacing:{before:170,after:80}}),registerWordTable(registerTableRows(group,data),window.docx)); });
+  for (const entry of selectedPhotoEntries(data)) { const name = entry.type === 'f2' ? entry.item.name : entry.type === 'f3' ? f2ProductName(entry.item.f2Id,data) : 'Producció F1'; children.push(new Paragraph({children:[new TextRun({text:`Fotos · ${entry.type.toUpperCase()} · ${name}`,bold:true,size:20,color:'315D42'})],spacing:{before:180,after:70}})); for (const photo of entry.item.photos) { const bytes = new Uint8Array(await (await fetch(photo)).arrayBuffer()), size = await imageSize(photo), scale = Math.min(150 / size.width, 110 / size.height, 1); children.push(new Paragraph({children:[new ImageRun({data:bytes,transformation:{width:Math.round(size.width * scale),height:Math.round(size.height * scale)}})],spacing:{after:70}})); } }
+  const blob = await Packer.toBlob(new Document({sections:[{properties:{page:{margin:{top:720,right:720,bottom:720,left:720}}},children}]})), link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'registre-kombutxa-sanitat.docx'; link.click(); URL.revokeObjectURL(link.href);
+}
