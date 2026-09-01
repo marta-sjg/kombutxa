@@ -20,10 +20,11 @@
   const showRegister = () => { loginForm.hidden = true; registerForm.hidden = false; registerPassword.value = ''; registerError.textContent = ''; setTimeout(() => registerName.focus(), 0); };
   const hideLogin = () => loginScreen.classList.add('is-hidden');
   const emitRole = role => window.dispatchEvent(new CustomEvent('kombutxa-role-change', { detail: { role } }));
+  const withoutUndefined = record => Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
   const publicDiary = data => ({
     f1: [],
-    f2: (data.f2 || []).map(({ id, name, date, liters, days, components, ingredients, notes, photos }) => ({ id, name, date, liters, days, components, ingredients, notes, photos })),
-    f3: (data.f3 || []).map(({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos }) => ({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos })),
+    f2: (data.f2 || []).map(({ id, name, date, liters, days, components, ingredients, notes, photos }) => withoutUndefined({ id, name, date, liters, days, components, ingredients, notes, photos })),
+    f3: (data.f3 || []).map(({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos }) => withoutUndefined({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos })),
     updatedAt: data.updatedAt || Date.now(), sharedImport2026: true
   });
   const writeCloud = async data => {
