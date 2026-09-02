@@ -168,7 +168,7 @@ function renderF2Updated(data) {
 }
 function renderF3Card(item, data, consumed) {
   const node = q(consumed ? 'f3-consumed-template' : 'f3-template').content.cloneNode(true), card = node.querySelector('.batch-card'), key = `f3:${item.id}`, target = q(consumed ? 'f3-consumed-list' : 'f3-stock-list');
-  card.id = `f3-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key); if (!consumed) addPhaseStatus(node, 'En estoc', 'is-stock');
+  card.id = `f3-${item.id}`; enableRegistryCardExpansion(card); bindSelection(node, key); if (!consumed) { const statusControl = node.querySelector('.f3-status-control select'); statusControl.value = item.status || 'stock'; statusControl.onchange = () => setF3Status(item.id, statusControl.value); }
   const product = f2ProductName(item.f2Id, data), f2 = data.f2.find(batch => batch.id === item.f2Id), f1 = f2 && data.f1.find(batch => batch.id === f2.f1Id), ingredientList = (f2?.components || []).map(component => component.name).filter(Boolean).join(', ');
   node.querySelector('h3').textContent = `F3 · ${product}`; node.querySelector('.card-date').textContent = formatRecordDate(item.date, 'Filtrada: ');
   node.querySelector('.base').textContent = `Producte: ${product} · ${f2Name(item.f2Id, data)}`;
