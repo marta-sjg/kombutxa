@@ -52,7 +52,7 @@
             <label>Lot automàtic<input id="f1-lot" type="text" required /></label>
             <label>Quantitat (L)<input id="f1-liters" type="number" step="0.1" min="0.1" required placeholder="2" /></label>
             <label>Temperatura (°C)<input id="f1-temperature" type="number" step="0.1" min="0" placeholder="24" /></label>
-            <label>pH<input id="f1-ph" type="number" step="0.1" min="0" max="14" placeholder="3.2" /></label>
+            <label>pH<input id="f1-ph" type="number" step="0.1" min="0" max="14" inputmode="decimal" placeholder="3.2" /></label>
             <label>Dies de F1<input id="f1-days" type="number" min="0" placeholder="7" /></label>
           </div>
           <div id="f1-recipe" class="recipe-box" aria-live="polite">Introdueix els litres per calcular la recepta.</div>
@@ -73,6 +73,7 @@
             <label>Lot automàtic<input id="f2-lot" type="text" required /></label>
             <label>Quantitat F2 (L)<input id="f2-liters" type="number" step="0.1" min="0.1" required placeholder="1" /></label>
               <label>Dies de F2<input id="f2-days" type="number" min="0" placeholder="3" /></label>
+              <label>pH<input id="f2-ph" type="number" min="0" max="14" step="0.1" inputmode="decimal" placeholder="3.2" /></label>
             </div>
             <div class="ingredient-heading"><h3>Ingredients de F2</h3><button id="add-ingredient" type="button" class="button secondary">Afegeix ingredient</button></div>
             <div id="f2-components" class="components"></div>
@@ -96,6 +97,7 @@
             <label>Nombre d'ampolles<input id="f3-bottles" type="number" min="1" step="1" placeholder="4" /></label>
             <label>Lot automàtic<input id="f3-lot" required /></label>
             <label>Temperatura de nevera (°C)<input id="f3-storage-temperature" type="number" step="0.1" min="0" placeholder="4" /></label>
+            <label>pH<input id="f3-ph" type="number" min="0" max="14" step="0.1" inputmode="decimal" placeholder="3.2" /></label>
             <label>Estat<select id="f3-status"><option value="stock">En estoc</option><option value="consumed">Consumida</option></select></label>
             <label>Consum preferent (+6 mesos)<input id="f3-best-before" type="date" readonly /></label>
             <label>Data de consum<input id="f3-consumed-date" type="date" /></label>
@@ -147,6 +149,6 @@
     <template id="f2-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3></h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><dl class="values"></dl><p class="recipe"></p><p class="ingredients"></p><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-template"><article class="batch-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Conservació</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
     <template id="f3-consumed-template"><article class="batch-card consumed-card"><div class="card-top"><div><p class="card-date"></p><h3>F3 · Consumida</h3></div><label class="record-selector"><input type="checkbox" class="record-check" /> Selecciona</label><div class="card-actions"><button type="button" class="edit-button icon-button" aria-label="Edita per corregir">✏️</button><button type="button" class="delete-button icon-button" aria-label="Elimina">🗑️</button></div></div><p class="base"></p><p class="product-summary"></p><p class="traceability"></p><dl class="values"></dl><p class="notes"></p><div class="gallery"></div></article></template>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js?v=64"></script><script src="app.js?v=66"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script><script src="firebase-sync.js?v=64"></script><script src="app.js?v=68"></script>
   </body>
 </html>
