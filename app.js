@@ -235,7 +235,7 @@ function applyUserRole(role) {
   document.body.dataset.userRole = viewer ? 'viewer' : 'admin';
   document.body.classList.toggle('viewer-mode', viewer);
   q('auth-button').textContent = viewer ? 'Canvia d’usuari' : 'Tanca sessió';
-  if (viewer && document.querySelector('[data-view-button="production"]')?.classList.contains('is-active')) setView('about');
+  if (viewer && (document.querySelector('[data-view-button="production"]')?.classList.contains('is-active') || document.querySelector('[data-view-button="calendar"]')?.classList.contains('is-active'))) setView('about');
   if (viewer) document.querySelectorAll('.values div').forEach(value => { if (value.querySelector('dt')?.textContent.trim().toLowerCase().startsWith('lot')) value.remove(); });
 }
 function renderPurchase(data) {
@@ -275,13 +275,14 @@ window.addEventListener('kombutxa-users-change', event => { registeredUsers = ev
 window.addEventListener('kombutxa-orders-change', event => { purchaseOrders = event.detail?.orders || []; renderPurchaseOrders(); });
 q('purchase-form').onsubmit = async event => {
   event.preventDefault(); const message = q('purchase-message');
+  if (document.body.classList.contains('client-demo')) { message.textContent = 'Simulació feta: la comanda s’enviaria per confirmar. No s’ha creat cap comanda real.'; return; }
   try { await window.kombutxaOrders?.place({ f3Id:q('purchase-f3-id').value, quantity:Number(q('purchase-quantity').value) }); message.textContent = 'Sol·licitud enviada. Et contactarem per confirmar-la.'; event.currentTarget.reset(); }
   catch (error) { message.textContent = error.message || 'No s’ha pogut enviar la sol·licitud.'; }
 };
 const renderBeforePurchase = render;
 render = function () { renderBeforePurchase(); renderPurchase(getData()); renderRegisteredUsers(); renderPurchaseOrders(); if (!isAdmin()) applyUserRole('viewer'); };
 const setViewBeforeRole = setView;
-setView = function (view) { setViewBeforeRole(!isAdmin() && view === 'production' ? 'about' : view); };
+setView = function (view) { setViewBeforeRole((!isAdmin() && ['production', 'calendar'].includes(view)) || (document.body.classList.contains('client-demo') && ['production', 'calendar', 'orders'].includes(view)) ? 'about' : view); };
 
 /* Consulta en castellà, avís de comandes i inici públic. */
 let currentLanguage = localStorage.getItem('diari-kombutxa-language') || 'ca';
@@ -317,6 +318,13 @@ window.addEventListener('kombutxa-orders-change', event => {
 q('order-notification').onclick = () => setView('orders');
 const renderBeforeLanguage = render;
 render = function () { renderBeforeLanguage(); applyLanguage(); };
+function setClientDemo(enabled) {
+  document.body.classList.toggle('client-demo', enabled);
+  q('client-demo-button').textContent = enabled ? 'Torna a administradora' : 'Veure com a client';
+  if (enabled) { setRegistryPanel('f2'); setView('purchase'); }
+  else setView('about');
+}
+q('client-demo-button').onclick = () => setClientDemo(!document.body.classList.contains('client-demo'));
 applyLanguage(); setView('about');
 
 /* Exportació sanitària amb una taula per fase i miniatures de les fotos. */
