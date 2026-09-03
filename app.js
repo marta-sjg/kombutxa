@@ -229,13 +229,14 @@ configurePhotoPicker('f2-photos', () => pendingPhotos, photos => { pendingPhotos
 configurePhotoPicker('f3-photos', () => pendingF3Photos, photos => { pendingF3Photos = photos; }, showF3Photos);
 
 let registeredUsers = [], purchaseOrders = [];
+let forumQuestions = [];
 const isAdmin = () => document.body.dataset.userRole !== 'viewer';
 function applyUserRole(role) {
   const viewer = role === 'viewer';
   document.body.dataset.userRole = viewer ? 'viewer' : 'admin';
   document.body.classList.toggle('viewer-mode', viewer);
   q('auth-button').textContent = viewer ? 'Canvia d’usuari' : 'Tanca sessió';
-  if (viewer && (document.querySelector('[data-view-button="production"]')?.classList.contains('is-active') || document.querySelector('[data-view-button="calendar"]')?.classList.contains('is-active'))) setView('about');
+  if (viewer) { setRegistryPanel('stock'); if (document.querySelector('[data-view-button="production"]')?.classList.contains('is-active') || document.querySelector('[data-view-button="calendar"]')?.classList.contains('is-active')) setView('about'); }
   if (viewer) document.querySelectorAll('.values div').forEach(value => { if (value.querySelector('dt')?.textContent.trim().toLowerCase().startsWith('lot')) value.remove(); });
 }
 function renderPurchase(data) {
@@ -273,6 +274,29 @@ function renderPurchaseOrders() {
 window.addEventListener('kombutxa-role-change', event => { applyUserRole(event.detail?.role); render(); });
 window.addEventListener('kombutxa-users-change', event => { registeredUsers = event.detail?.users || []; renderRegisteredUsers(); });
 window.addEventListener('kombutxa-orders-change', event => { purchaseOrders = event.detail?.orders || []; renderPurchaseOrders(); });
+function renderForum() {
+  const list = q('forum-list'); if (!list) return;
+  const formatDate = value => value ? new Intl.DateTimeFormat(currentLanguage === 'es' ? 'es-ES' : 'ca-ES', { dateStyle: 'medium' }).format(new Date(value)) : '';
+  list.innerHTML = forumQuestions.length ? forumQuestions.map(question => {
+    const replies = Object.values(question.replies || {}).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    const answers = replies.map(reply => `<div class="forum-answer"><strong>${escapeHtml(reply.author || 'Marta')}</strong><p>${escapeHtml(reply.text || '')}</p></div>`).join('');
+    const replyForm = `<form class="forum-reply-form" data-forum-reply="${escapeHtml(question.id)}"><label>${isAdmin() ? 'Resposta de MARTA' : 'La teva resposta'}<textarea rows="2" maxlength="1000" required placeholder="Escriu la resposta..."></textarea></label><button class="button secondary" type="submit">Publica la resposta</button></form>`;
+    return `<article class="forum-question-card"><h3>${escapeHtml(question.authorName || 'Usuari')}</h3><span class="forum-meta">${formatDate(question.createdAt)}</span><p>${escapeHtml(question.text || '')}</p>${answers}${replyForm}</article>`;
+  }).join('') : '<p class="empty-state">Encara no hi ha preguntes. Sigues la primera persona a fer-ne una.</p>';
+  list.querySelectorAll('[data-forum-reply]').forEach(form => form.onsubmit = async event => {
+    event.preventDefault();
+    const message = q('forum-message'), text = form.querySelector('textarea').value;
+    try { await window.kombutxaForum?.answer(form.dataset.forumReply, text); message.textContent = 'Resposta publicada.'; }
+    catch (error) { message.textContent = error.message || 'No s’ha pogut publicar la resposta.'; }
+  });
+}
+window.addEventListener('kombutxa-forum-change', event => { forumQuestions = event.detail?.questions || []; renderForum(); });
+q('forum-form').onsubmit = async event => {
+  event.preventDefault(); const message = q('forum-message');
+  if (document.body.classList.contains('client-demo')) { message.textContent = 'Simulació: la pregunta no s’ha publicat.'; return; }
+  try { await window.kombutxaForum?.ask(q('forum-question').value); q('forum-question').value = ''; message.textContent = 'Pregunta publicada. La Marta et respondrà aquí.'; }
+  catch (error) { message.textContent = error.message || 'No s’ha pogut publicar la pregunta.'; }
+};
 q('purchase-form').onsubmit = async event => {
   event.preventDefault(); const message = q('purchase-message');
   if (document.body.classList.contains('client-demo')) { message.textContent = 'Simulació feta: la comanda s’enviaria per confirmar. No s’ha creat cap comanda real.'; return; }
@@ -280,15 +304,15 @@ q('purchase-form').onsubmit = async event => {
   catch (error) { message.textContent = error.message || 'No s’ha pogut enviar la sol·licitud.'; }
 };
 const renderBeforePurchase = render;
-render = function () { renderBeforePurchase(); renderPurchase(getData()); renderRegisteredUsers(); renderPurchaseOrders(); if (!isAdmin()) applyUserRole('viewer'); };
+render = function () { renderBeforePurchase(); renderPurchase(getData()); renderRegisteredUsers(); renderPurchaseOrders(); renderForum(); if (!isAdmin()) applyUserRole('viewer'); };
 const setViewBeforeRole = setView;
 setView = function (view) { setViewBeforeRole((!isAdmin() && ['production', 'calendar'].includes(view)) || (document.body.classList.contains('client-demo') && ['production', 'calendar', 'orders'].includes(view)) ? 'about' : view); };
 
 /* Consulta en castellà, avís de comandes i inici públic. */
 let currentLanguage = localStorage.getItem('diari-kombutxa-language') || 'ca';
 const languageCopy = {
-  ca: { aboutTab: 'La kombutxa', registryTab: 'Registre', calendarTab: 'Calendari', purchaseTab: 'Compra', aboutTitle: 'Què és realment la kombutxa?', companyTitle: 'La nostra història', company: 'Som una petita empresa nascuda de la passió de la Marta per la fermentació. Tot va començar amb petites proves fetes a casa, escoltant els temps, els sabors i els cultius, fins a convertir-se en una botiga online petita i propera. Elaborem kombutxa artesana amb cura, transparència i ganes de compartir una manera més viva de beure.', purchaseTitle: 'Compra', purchaseHelp: 'Selecciona un sabor disponible i envia la teva sol·licitud.', logout: 'Tanca sessió', changeUser: 'Canvia d’usuari', lead: 'És te endolcit fermentat amb un cultiu de llevats i bacteris, sovint anomenat SCOBY. El resultat és una beguda àcida, amb sabor propi i, si no es pasteuritza, amb microorganismes vius.' },
-  es: { aboutTab: 'La kombucha', registryTab: 'Registro', calendarTab: 'Calendario', purchaseTab: 'Comprar', aboutTitle: '¿Qué es realmente la kombucha?', companyTitle: 'Nuestra historia', company: 'Somos una pequeña empresa nacida de la pasión de Marta por la fermentación. Todo empezó con pequeñas pruebas hechas en casa, escuchando los tiempos, los sabores y los cultivos, hasta convertirse en una tienda online pequeña y cercana. Elaboramos kombucha artesanal con cuidado, transparencia y ganas de compartir una forma más viva de beber.', purchaseTitle: 'Comprar', purchaseHelp: 'Selecciona un sabor disponible y envía tu solicitud.', logout: 'Cerrar sesión', changeUser: 'Cambiar de usuario', lead: 'Es té endulzado fermentado con un cultivo de levaduras y bacterias, a menudo llamado SCOBY. El resultado es una bebida ácida, con sabor propio y, si no se pasteuriza, con microorganismos vivos.' }
+  ca: { aboutTab: 'La kombutxa', registryTab: 'Registre', calendarTab: 'Calendari', purchaseTab: 'Compra', forumTab: 'Preguntes', aboutTitle: 'Què és realment la kombutxa?', companyTitle: 'La nostra història', company: 'Som una petita empresa nascuda de la passió de la Marta per la fermentació. Tot va començar amb petites proves fetes a casa, escoltant els temps, els sabors i els cultius, fins a convertir-se en una botiga online petita i propera. Elaborem kombutxa artesana amb cura, transparència i ganes de compartir una manera més viva de beure.', purchaseTitle: 'Compra', purchaseHelp: 'Selecciona un sabor disponible i envia la teva sol·licitud.', forumTitle: 'Preguntes i respostes', forumHelp: 'Tens algun dubte sobre la kombutxa? Deixa la teva pregunta i et respondrem aquí.', questionLabel: 'La teva pregunta', questionPlaceholder: 'Escriu aquí la teva pregunta...', questionButton: 'Publica la pregunta', logout: 'Tanca sessió', changeUser: 'Canvia d’usuari', lead: 'És te endolcit fermentat amb un cultiu de llevats i bacteris, sovint anomenat SCOBY. El resultat és una beguda àcida, amb sabor propi i, si no es pasteuritza, amb microorganismes vius.' },
+  es: { aboutTab: 'La kombucha', registryTab: 'Registro', calendarTab: 'Calendario', purchaseTab: 'Comprar', forumTab: 'Preguntas', aboutTitle: '¿Qué es realmente la kombucha?', companyTitle: 'Nuestra historia', company: 'Somos una pequeña empresa nacida de la pasión de Marta por la fermentación. Todo empezó con pequeñas pruebas hechas en casa, escuchando los tiempos, los sabores y los cultivos, hasta convertirse en una tienda online pequeña y cercana. Elaboramos kombucha artesanal con cuidado, transparencia y ganas de compartir una forma más viva de beber.', purchaseTitle: 'Comprar', purchaseHelp: 'Selecciona un sabor disponible y envía tu solicitud.', forumTitle: 'Preguntas y respuestas', forumHelp: '¿Tienes alguna duda sobre la kombucha? Deja tu pregunta y te responderemos aquí.', questionLabel: 'Tu pregunta', questionPlaceholder: 'Escribe aquí tu pregunta...', questionButton: 'Publicar la pregunta', logout: 'Cerrar sesión', changeUser: 'Cambiar de usuario', lead: 'Es té endulzado fermentado con un cultivo de levaduras y bacterias, a menudo llamado SCOBY. El resultado es una bebida ácida, con sabor propio y, si no se pasteuriza, con microorganismos vivos.' }
 };
 function applyLanguage(save = false) {
   const copy = languageCopy[currentLanguage]; document.documentElement.lang = currentLanguage;
@@ -297,8 +321,10 @@ function applyLanguage(save = false) {
   document.querySelector('[data-view-button="registry"]').textContent = copy.registryTab;
   document.querySelector('[data-view-button="calendar"]').textContent = copy.calendarTab;
   document.querySelector('[data-view-button="purchase"]').textContent = copy.purchaseTab;
+  document.querySelector('[data-view-button="forum"]').textContent = copy.forumTab;
   q('about-title').textContent = copy.aboutTitle; q('company-title').textContent = copy.companyTitle; q('company-copy').textContent = copy.company;
   q('purchase-title').textContent = copy.purchaseTitle; document.querySelector('#purchase-title + p').textContent = copy.purchaseHelp; document.querySelector('.about-lead').textContent = copy.lead;
+  q('forum-title').textContent = copy.forumTitle; q('forum-help').textContent = copy.forumHelp; q('forum-question-label').firstChild.textContent = copy.questionLabel; q('forum-question').placeholder = copy.questionPlaceholder; q('forum-submit').textContent = copy.questionButton;
   const aboutCards = currentLanguage === 'es' ? [['Los cuatro ingredientes','<strong>Agua, té, azúcar y SCOBY.</strong> El azúcar no solo endulza: es el alimento de los microorganismos durante la fermentación.'],['El SCOBY','Es una capa de celulosa que forman sobre todo las bacterias acéticas. Actúa como casa del cultivo, aunque el líquido también contiene microorganismos activos.'],['¿Qué ocurre en F1?','Las levaduras transforman parte del azúcar en CO₂ y alcohol. Después, las bacterias transforman parte del alcohol en ácidos orgánicos; por eso la bebida se vuelve más ácida.'],['¿Qué ocurre en F2?','Al añadir fruta o aromas y cerrar la botella, los azúcares disponibles generan más CO₂. Así se crea la gasificación natural y se intensifica el sabor.']] : [['Els quatre ingredients','<strong>Aigua, te, sucre i SCOBY.</strong> El sucre no és només per endolcir: és l’aliment dels microorganismes durant la fermentació.'],['El SCOBY','És una capa de cel·lulosa que formen sobretot els bacteris acètics. Actua com a casa del cultiu, però el líquid també conté microorganismes actius.'],['Què passa a la F1?','Els llevats transformen una part del sucre en CO₂ i alcohol. Després, els bacteris transformen part de l’alcohol en àcids orgànics; per això la beguda es torna més àcida.'],['Què passa a la F2?','En afegir fruita o aromes i tancar l’ampolla, els sucres disponibles generen més CO₂. Això crea la gasificació natural i intensifica el sabor.']];
   document.querySelectorAll('.about-grid article').forEach((card, index) => { card.innerHTML = `<h3>${aboutCards[index][0]}</h3><p>${aboutCards[index][1]}</p>`; });
   q('auth-button').textContent = isAdmin() ? copy.logout : copy.changeUser;
@@ -321,7 +347,7 @@ render = function () { renderBeforeLanguage(); applyLanguage(); };
 function setClientDemo(enabled) {
   document.body.classList.toggle('client-demo', enabled);
   q('client-demo-button').textContent = enabled ? 'Torna a administradora' : 'Veure com a client';
-  if (enabled) { setRegistryPanel('f2'); setView('purchase'); }
+  if (enabled) { setRegistryPanel('stock'); setView('purchase'); }
   else setView('about');
 }
 q('client-demo-button').onclick = () => setClientDemo(!document.body.classList.contains('client-demo'));
