@@ -13,7 +13,7 @@
   const loginEmail = document.querySelector('#login-email'), loginPassword = document.querySelector('#login-password'), loginError = document.querySelector('#login-error'), loginButton = document.querySelector('#login-submit');
   const registerName = document.querySelector('#register-name'), registerEmail = document.querySelector('#register-email'), registerPassword = document.querySelector('#register-password'), registerError = document.querySelector('#register-error'), registerButton = document.querySelector('#register-submit');
   const status = document.querySelector('#cloud-status'), bar = document.querySelector('.cloud-bar'), authButton = document.querySelector('#auth-button');
-  let diaryRef = null, publicRef = null, usersRef = null, ordersRef = null, currentUser = null, currentRole = null;
+  let diaryRef = null, publicRef = null, usersRef = null, ordersRef = null, forumRef = null, currentUser = null, currentRole = null;
   const localData = () => { try { return JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch { return null; } };
   const setStatus = (message, state = '') => { status.textContent = message; bar.classList.toggle('is-synced', state === 'synced'); bar.classList.toggle('is-error', state === 'error'); };
   const showLogin = () => { loginScreen.classList.remove('is-hidden'); loginForm.hidden = false; registerForm.hidden = true; loginPassword.value = ''; loginError.textContent = ''; };
@@ -32,7 +32,7 @@
     try { setStatus('S’estan sincronitzant les dades…'); await diaryRef.set({ data, updatedAt: data.updatedAt || Date.now() }); await publicRef.set({ data: publicDiary(data), updatedAt: data.updatedAt || Date.now() }); setStatus('Dades sincronitzades.', 'synced'); }
     catch (error) { console.error(error); setStatus('No s’han pogut sincronitzar.', 'error'); }
   };
-  const releaseListeners = () => { if (diaryRef) diaryRef.off(); if (publicRef) publicRef.off(); if (usersRef) usersRef.off(); if (ordersRef) ordersRef.off(); diaryRef = null; publicRef = null; usersRef = null; ordersRef = null; };
+  const releaseListeners = () => { if (diaryRef) diaryRef.off(); if (publicRef) publicRef.off(); if (usersRef) usersRef.off(); if (ordersRef) ordersRef.off(); if (forumRef) forumRef.off(); diaryRef = null; publicRef = null; usersRef = null; ordersRef = null; forumRef = null; };
   const registerViewerProfile = async user => {
     const ref = database.ref(`registeredUsers/${user.uid}`), snapshot = await ref.once('value');
     if (!snapshot.exists()) await ref.set({ name: user.displayName || '', email: user.email || '', role: 'viewer', registeredAt: firebase.database.ServerValue.TIMESTAMP });
@@ -64,6 +64,13 @@
       window.dispatchEvent(new CustomEvent('kombutxa-orders-change', { detail: { orders } }));
     });
   };
+  const listenForum = () => {
+    forumRef = database.ref('forum');
+    forumRef.on('value', snapshot => {
+      const questions = Object.entries(snapshot.val() || {}).map(([id, question]) => ({ id, ...question })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      window.dispatchEvent(new CustomEvent('kombutxa-forum-change', { detail: { questions } }));
+    });
+  };
   window.kombutxaCloud = { save: writeCloud };
   window.kombutxaOrders = { async place(order) {
     if (!currentUser || currentRole !== 'viewer') throw new Error('Inicia sessió amb un compte de consulta.');
@@ -83,6 +90,20 @@
     }
     await database.ref(`orders/${order.userId}/${order.id}`).update({ status, managedAt: firebase.database.ServerValue.TIMESTAMP });
   } };
+  window.kombutxaForum = {
+    async ask(text) {
+      if (!currentUser) throw new Error('Inicia sessió per publicar una pregunta.');
+      const question = String(text || '').trim();
+      if (!question) throw new Error('Escriu la pregunta abans de publicar-la.');
+      await database.ref('forum').push({ authorUid: currentUser.uid, authorName: currentUser.displayName || 'Usuari', authorEmail: currentUser.email || '', text: question, createdAt: firebase.database.ServerValue.TIMESTAMP });
+    },
+    async answer(questionId, text) {
+      if (!currentUser) throw new Error('Inicia sessió per respondre una pregunta.');
+      const answer = String(text || '').trim();
+      if (!answer) throw new Error('Escriu una resposta abans de publicar-la.');
+      await database.ref(`forum/${questionId}/replies`).push({ text: answer, createdAt: firebase.database.ServerValue.TIMESTAMP, author: currentRole === 'admin' ? 'Marta' : (currentUser.displayName || 'Usuari'), authorUid: currentUser.uid });
+    }
+  };
   document.querySelector('#show-register').onclick = showRegister;
   document.querySelector('#show-login').onclick = showLogin;
   loginForm.addEventListener('submit', async event => {
@@ -109,7 +130,7 @@
     try {
       if (role === 'viewer') await registerViewerProfile(user);
       hideLogin(); emitRole(role); setStatus(role === 'admin' ? 'Mode administradora.' : 'Mode consulta.', 'synced');
-      listenDiary(role); if (role === 'admin') { listenUsers(); listenOrders(); }
+      listenDiary(role); listenForum(); if (role === 'admin') { listenUsers(); listenOrders(); }
     } catch (error) { console.error(error); showLogin(); loginError.textContent = 'No s’ha pogut configurar l’accés.'; }
   });
 })();
