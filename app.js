@@ -345,10 +345,10 @@ window.addEventListener('kombutxa-orders-change', event => {
 q('order-notification').onclick = () => setView('orders');
 const renderBeforeLanguage = render;
 render = function () { renderBeforeLanguage(); applyLanguage(); };
-(enabled) {
+function setClientDemo(enabled) {
   document.body.classList.toggle('client-demo', enabled);
   q('client-demo-button').textContent = enabled ? 'Torna a administradora' : 'Veure com a client';
-  if (enabled) { setRegistryPanel('stock'); setView('purchase'); }
+  if (enabled) { setRegistryPanel('stock'); setView('about'); }
   else setView('about');
 }
 q('client-demo-button').onclick = () => setClientDemo(!document.body.classList.contains('client-demo'));
