@@ -21,12 +21,16 @@
   const hideLogin = () => loginScreen.classList.add('is-hidden');
   const emitRole = role => window.dispatchEvent(new CustomEvent('kombutxa-role-change', { detail: { role } }));
   const withoutUndefined = record => Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined));
-  const publicDiary = data => ({
-    f1: [],
-    f2: (data.f2 || []).map(({ id, name, date, liters, days, components, ingredients, notes, photos }) => withoutUndefined({ id, name, date, liters, days, components, ingredients, notes, photos })),
-    f3: (data.f3 || []).map(({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos }) => withoutUndefined({ id, f2Id, date, liters, bottles, status, bestBefore, notes, photos })),
-    updatedAt: data.updatedAt || Date.now(), sharedImport2026: true
-  });
+  const publicDiary = data => {
+    const stock = (data.f3 || []).filter(item => (item.status || 'stock') === 'stock' && Number(item.bottles || 0) > 0);
+    const stockFlavours = new Set(stock.map(item => item.f2Id));
+    return {
+      f1: [],
+      f2: (data.f2 || []).filter(item => stockFlavours.has(item.id)).map(({ id, name }) => ({ id, name })),
+      f3: stock.map(({ id, f2Id, bottles, status, bestBefore }) => withoutUndefined({ id, f2Id, bottles, status, bestBefore })),
+      updatedAt: data.updatedAt || Date.now(), sharedImport2026: true
+    };
+  };
   const writeCloud = async data => {
     if (!diaryRef || currentRole !== 'admin' || !data) return;
     try { setStatus('S’estan sincronitzant les dades…'); await diaryRef.set({ data, updatedAt: data.updatedAt || Date.now() }); await publicRef.set({ data: publicDiary(data), updatedAt: data.updatedAt || Date.now() }); setStatus('Dades sincronitzades.', 'synced'); }
