@@ -237,7 +237,7 @@ function applyUserRole(role) {
   document.body.classList.toggle('viewer-mode', viewer);
   document.body.classList.toggle('admin-mode', !viewer);
   q('auth-button').textContent = viewer ? 'Canvia d’usuari' : 'Tanca sessió';
-  if (viewer) { setRegistryPanel('stock'); if (document.querySelector('[data-view-button="production"]')?.classList.contains('is-active') || document.querySelector('[data-view-button="calendar"]')?.classList.contains('is-active')) setView('about'); }
+  if (viewer) { setRegistryPanel('stock'); setView('about'); }
   if (viewer) document.querySelectorAll('.values div').forEach(value => { if (value.querySelector('dt')?.textContent.trim().toLowerCase().startsWith('lot')) value.remove(); });
 }
 function renderPurchase(data) {
